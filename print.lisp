@@ -1,0 +1,35 @@
+;;;;; bender – Copyright (c) 2014 Sven Michael Klose <pixel@copei.de>
+
+(defun hex (x w)
+  (let r nil
+    (adotimes (w (list-string r))
+      (push (elt '(#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7
+                   #\8 #\9 #\A #\B #\C #\D #\E #\F)
+                 (bit-and x 15))
+            r)
+      (= x (>> x 4)))))
+
+(def-instruction print-operand (instruction &optional (o *standard-output*))
+  (princ " " o)
+  (unless (in? addrmode 'accu 'single)
+    (? (eq addrmode 'imm)
+       (princ "#" o))
+    (? (in? addrmode 'indi 'izpx 'izpy)
+       (princ "(" o))
+    (princ "$" o)
+    (? (eq addrmode 'branch)
+       (princ "xx" o)
+       (princ (apply #'+ (filter [hex _ 2] (instruction-operand instruction))) o))
+    (? (in? addrmode 'izpy 'indi)
+       (princ ")" o))
+    (? (in? addrmode 'izpx 'absx 'zpx 'izpx)
+       (princ ",x" o))
+    (? (in? addrmode 'izpy 'absy)
+       (princ ",y" o))
+    (? (in? addrmode 'izpx)
+       (princ ")" o))))
+
+(def-instruction print-instruction (instruction &optional (out *standard-output*))
+  (format out "    ~A " mnemonic)
+  (print-operand instruction out)
+  (terpri out))

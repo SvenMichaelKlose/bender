@@ -1,0 +1,52 @@
+# Bender syntax
+
+The assembler is line-oriented.  A line may contain a label and an instruction
+or a directive. Also literal values are possible.
+
+## Instructions
+
+Instructions are notated as usual.  The A register must not be used as an
+operand.  Comments start with a semicolon.
+
+    lda #0
+    ror a   ; Syntax error. 'a' is implied.
+    ror     ; The right way to notate it.
+
+## Literals
+
+Bytes, words and strings can be written without directives. Words must have
+enough leading zeroes:
+
+    $1      ; A hexadecimal byte.
+    $01     ; A hexadecimal byte as well.
+    $001    ; A hexadecimal word.
+    $0001   ; Also a hexadecimal word.
+    %101    ; A binary byte.
+    "This is an ASCIIZ string." 0
+
+## Labels
+
+Label definitions must end with a colon.
+
+    label:
+
+## Local labels
+
+Local scopes are opened with the 'open_scope' directive and close with the
+'close_scope' directive. Scopes may be nested:
+
+    wait_for_tape_motor_to_have_started:
+    open_scope      ; Labels l1 and l2 won't be accessible outside this.
+        ldx #255
+    l2: ldy #32
+    l1: dey
+        bne l1
+        dex
+        bne l2
+    close_scope
+
+## Inline tré expressions
+
+Lisp expressions can be inserted with the @ character.
+
+    ldx #@(- table_end table_start)
