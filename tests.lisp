@@ -5,10 +5,12 @@
    (format t "; All instructions assembled correctly.~%")
    (error "Instructions assembled incorrectly.~%"))
 
+(disassemble-file "tests/all_instructions.bin" "all_instructions_diassembled.asm")
+
 #|
 (assemble-files "test.prg"
                 "../vic-20/viclib/vic.bender.asm"
                 "../vic-20/viclib/basic-loader.bender.asm"
                 "test.asm")
-|#
 (make-vice-commands "test.txt")
+|#
