@@ -14,6 +14,14 @@
                     0
                     (eval (macroexpand (labels-to-exprs .x))))))
 
+(defun assemble-operand (out inst operand)
+  (when (eq 'branch (instruction-addrmode inst))
+    (= operand (- operand *pc* 1)))
+  (dotimes (i (instruction-operand-size inst))
+    (princ (code-char (mod operand 256)) out)
+    (++! *pc*)
+    (= operand (>> operand 8))))
+
 (defun assemble-instruction (out mnemonic addrmode operand)
   (let inst (assemble-mnemonic-addrmode mnemonic addrmode)
     (= (instruction-operand inst) operand)
@@ -30,12 +38,7 @@
     (instruction-optimize-addrmode inst)
     (princ (code-char (instruction-opcode inst)) out)
     (++! *pc*)
-    (when (eq 'branch (instruction-addrmode inst))
-      (= operand (- operand *pc* 1)))
-    (dotimes (i (instruction-operand-size inst))
-      (princ (code-char (mod operand 256)) out)
-      (++! *pc*)
-      (= operand (>> operand 8)))))
+    (assemble-operand out inst operand)))
 
 (defun assemble-assignment (x)
   (add-label .x. (assemble-expression ..x.)))
