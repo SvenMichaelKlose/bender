@@ -57,10 +57,11 @@
                                    m))))
 
 (defun stream-instruction (in)
-  (unless (end-of-file? in)
-    (aprog1 (opcode-instruction (read-char in))
-      (dotimes (i (instruction-operand-size !))
-        (push (read-char in) (instruction-operand !))))))
+  (alet (read-char in)
+    (unless (end-of-file? in)
+      (aprog1 (opcode-instruction !)
+        (dotimes (i (instruction-operand-size !))
+          (push (read-char in) (instruction-operand !)))))))
 
 (defun disassemble-file (in-name out-name)
   (with-input-file i in-name
