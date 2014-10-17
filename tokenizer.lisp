@@ -11,16 +11,16 @@
 (defconstant *directives* '(org open_scope close_scope fill))
 
 (defun skip-whitespaces (in)
-  (unless (end-of-file? in)
-    (alet (peek-char in)
+  (alet (peek-char in)
+    (unless (end-of-file? in)
       (when (| (control-char? !)
             (== #\  !))
         (read-char in)
         (skip-whitespaces in)))))
 
 (defun read-identifier (in)
-  (unless (end-of-file? in)
-     (alet (peek-char in)
+  (alet (peek-char in)
+    (unless (end-of-file? in)
        (& (| (alpha-char? !)
              (digit-char? !)
              (== #\_ !))
@@ -85,6 +85,7 @@
                  (error "Unexpected character ~A." (read-char in)))))))))
 
 (defun tokenize-line (in)
+  (peek-char in)
   (unless (end-of-file? in)
     (. (tokenize in)
        (tokenize-line in))))
