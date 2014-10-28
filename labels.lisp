@@ -32,7 +32,7 @@
       (& (zero? *pass*)
          (href s !)
          (error "Label '~A' is already defined." !))
-      (? (not (== (href s !) addr))
+      (? (not (equal (href s !) addr))
          (= *label-changed?* t))
       (= (href s !) addr))))
 
