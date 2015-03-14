@@ -36,7 +36,7 @@
 (defun tokenize-identifier (in)
   (awhen (read-identifier in)
     (let n (list-string !)
-      (alet (make-symbol (string-upcase n))
+      (alet (make-symbol (upcase n))
         (?
           (directive? !) (. 'directive !)
           (mnemonic? !)  (. 'mnemonic !)
@@ -75,9 +75,7 @@
            (== ! #\@)       (tokenize-expression in)
            (== ! #\$)       (tokenize-hexadecimal in)
            (== ! #\%)       (tokenize-binary in)
-           (== ! #\;)       (progn
-                              (read-line in)
-                              nil)
+           (== ! #\;)       (& (read-line in) nil)
            (digit-char? !)  (tokenize-decimal in)
            (| (tokenize-identifier in)
               (? (control-char? !)

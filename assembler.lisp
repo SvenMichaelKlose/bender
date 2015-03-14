@@ -7,7 +7,7 @@
   (opcode-instruction (generate-opcode mnemonic addrmode)))
 
 (defun assemble-expression (x)
-  (case x. :test #'eq
+  (case x.
     'number      .x
     'identifier  (get-label .x)
     'expression  (? (zero? *pass*)
@@ -68,7 +68,7 @@
       (++! *pc*))))
 
 (defun assemble-directive (x)
-  (case .x. :test #'eq
+  (case .x.
     'org          (= *pc* (assemble-expression ..x.))
     'open_scope   (open-scope)
     'close_scope  (close-scope)
@@ -78,7 +78,7 @@
 (defun assemble-list (out x)
   (adolist x
     (format t "Assembling ~A.~%" !)
-    (case !. :test #'eq
+    (case !.
       'label       (add-label .! *pc*)
       'mnemonic    (apply #'assemble-instruction
                           out (list .!. ..!. (assemble-expression ...!.)))

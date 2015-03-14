@@ -1,4 +1,4 @@
-;;;;; bender – Copyright (c) 2014 Sven Michael Klose <pixel@copei.de>
+; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
 (defvar *labels*)
 (defvar *scope*)
@@ -28,7 +28,7 @@
 
 (defun add-label (x addr)
   (let s (| *current-scope* *labels*)
-    (alet (string-downcase x)
+    (alet (downcase x)
       (& (zero? *pass*)
          (href s !)
          (error "Label '~A' is already defined." !))
@@ -37,7 +37,7 @@
       (= (href s !) addr))))
 
 (defun get-label-0 (s x)
-  (& s (href s (string-downcase x))))
+  (& s (href s (downcase x))))
 
 (defun get-label (x)
   (| (get-label-0 *current-scope* x)

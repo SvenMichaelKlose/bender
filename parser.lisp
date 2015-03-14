@@ -1,4 +1,4 @@
-;;;;; bender – Copyright (c) 2014 Sven Michael Klose <pixel@copei.de>
+; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
 (defun parse-labels (x)
   (& x
@@ -26,8 +26,8 @@
          (? (eq 'comma (car .x.))
             (? (eq 'identifier (car ..x.))
                (list (?
-                       (string== "X" (string-upcase (cdr ..x.)))  'absx
-                       (string== "Y" (string-upcase (cdr ..x.)))  'absy
+                       (string== "X" (upcase (cdr ..x.)))  'absx
+                       (string== "Y" (upcase (cdr ..x.)))  'absy
                        (error "Index register expected instead of '~A'." (cdr ..x.)))
                      x.)
                (error "Index register expected."))
@@ -40,7 +40,7 @@
            (?
              (eq 'comma (car ...x.))
                (?
-                 (string== "Y" (string-upcase (cdr ....x.)))  (list 'izpy .x.)
+                 (string== "Y" (upcase (cdr ....x.)))  (list 'izpy .x.)
                  (error "Index register Y expected."))
              ...x.
                (error "Comma or end of line expected instead of ~A." (car ...x.))
@@ -48,7 +48,7 @@
            (eq 'comma (car ..x.))
              (? (eq 'identifier (car ...x.))
                 (?
-                  (string== "X" (string-upcase (cdr ...x.)))
+                  (string== "X" (upcase (cdr ...x.)))
                     (? (eq 'bracket-close (car ....x.))
                        (list 'izpx .x.)
                        (error "Closing bracket expected instead of ~A." ....x.))
@@ -90,9 +90,9 @@
   (awhen (parse-labels x)
     (parse-0 !)))
 
-(defun parse-stream (in)
+(defun parse-stream (i)
   (with-queue q
-    (while (not (end-of-file? i))
+    (while (peek-char i)
            (apply #'+ (queue-list q))
       (with-stream-string line (princ (read-line i))
         (!? (late-print (parse (late-print (remove-if #'not (tokenize-line line)))))
