@@ -101,6 +101,8 @@
   (with-queue q
     (while (peek-char i)
            (apply #'+ (queue-list q))
-      (with-stream-string line (princ (read-line i))
-        (!? (parse (remove-if #'not (tokenize-line line)))
-            (enqueue q !))))))
+      (alet (read-line i)
+        (format t "~LParsing: ~A" !)
+        (with-stream-string line !
+          (!? (parse (remove-if #'not (tokenize-line line)))
+              (enqueue q !)))))))

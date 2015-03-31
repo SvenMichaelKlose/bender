@@ -79,7 +79,7 @@
 
 (defun assemble-list (out x)
   (adolist x
-    (format t "Assembling ~A.~%" !)
+    (format t "Assembling: ~A~%" !)
     (case !.
       'label        (add-label .! *pc*)
       'instruction  (funcall #'assemble-instruction out .!. ..!. (assemble-expression ...!.))
