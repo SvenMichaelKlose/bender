@@ -1,9 +1,19 @@
 ; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
+(def-head-predicate identifier)
+(def-head-predicate colon)
+(def-head-predicate hash)
+(def-head-predicate comma)
+(def-head-predicate bracket-open)
+(def-head-predicate bracket-close)
+(def-head-predicate assignment)
+(def-head-predicate label)
+(def-head-predicate instruction)
+
 (defun parse-labels (x)
   (& x
-     (? (& (eq 'identifier (car x.))
-           (eq 'colon (car .x.)))
+     (? (& (identifier? x.)
+           (colon? .x.))
         (. (. 'label (cdr x.))
            (parse-labels ..x))
         (. x. (parse-labels .x)))))
@@ -23,8 +33,8 @@
     (number-or-identifier? x.)
       (? (not .x)
          (list 'abs x.)
-         (? (eq 'comma (car .x.))
-            (? (eq 'identifier (car ..x.))
+         (? (comma? .x.)
+            (? (identifier? ..x.)
                (list (?
                        (string== "X" (upcase (cdr ..x.)))  'absx
                        (string== "Y" (upcase (cdr ..x.)))  'absy
@@ -32,39 +42,36 @@
                      x.)
                (error "Index register expected."))
             (error "Comma expected instead of ~A." (car .x.))))
-    (eq 'bracket-open x..)
+    (bracket-open? x.)
       (progn
         (| (number-or-identifier? .x.)
            (error "Expression expected instead of ~A." (car .x.)))
-        (? (eq 'bracket-close (car ..x.))
+        (? (bracket-close? ..x.)
            (?
-             (eq 'comma (car ...x.))
+             (comma? ...x.)
                (?
                  (string== "Y" (upcase (cdr ....x.)))  (list 'izpy .x.)
                  (error "Index register Y expected."))
              ...x.
                (error "Comma or end of line expected instead of ~A." (car ...x.))
              (list 'indi .x.))
-           (eq 'comma (car ..x.))
-             (? (eq 'identifier (car ...x.))
+           (comma? ..x.)
+             (? (identifier? ...x.)
                 (?
                   (string== "X" (upcase (cdr ...x.)))
-                    (? (eq 'bracket-close (car ....x.))
+                    (? (bracket-close? ....x.)
                        (list 'izpx .x.)
                        (error "Closing bracket expected instead of ~A." ....x.))
                   (error "Index register X expected."))
                 (error "Index register X expected."))
            (error "~A closing bracket."
-                  (? (member-if [eq 'bracket-close _.] ...x)
+                  (? (member-if #'bracket-close? ...x)
                      "Misplaced"
                      "Missing"))))
     (error "Syntax error at ~A." x.)))
 
-(defun parse-mnemonic (x)
-  (parse-addrmode x))
-
 (defun parse-assignment (x)
-  (| (eq 'assignment (car .x.))
+  (| (assignment? .x.)
      (error "Assignment '=' expected instead of ~A." .x))
   `((assignment ,(cdr x.) ,..x.)))
 
@@ -79,9 +86,9 @@
       (case x.. :test #'eq
         'label       (. x. (parse-0 .x))
         'directive   (parse-directive x)
-        'mnemonic    `((,(car x.) ,(cdr x.) ,@(parse-mnemonic .x)))
-        (? (eq 'identifier (car x.))
-           (? (eq 'assignment (car .x.))
+        'mnemonic    `((instruction ,(cdr x.) ,@(parse-addrmode .x)))
+        (? (identifier? x.)
+           (? (assignment? .x.)
               (parse-assignment x)
               (. x. (parse-0 .x)))
            (error "Unexpected token ~A." x.))))))
@@ -95,5 +102,5 @@
     (while (peek-char i)
            (apply #'+ (queue-list q))
       (with-stream-string line (princ (read-line i))
-        (!? (late-print (parse (late-print (remove-if #'not (tokenize-line line)))))
+        (!? (parse (remove-if #'not (tokenize-line line)))
             (enqueue q !))))))

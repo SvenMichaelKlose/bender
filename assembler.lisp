@@ -81,14 +81,14 @@
   (adolist x
     (format t "Assembling ~A.~%" !)
     (case !.
-      'label       (add-label .! *pc*)
-      'mnemonic    (funcall #'assemble-instruction out .!. ..!. (assemble-expression ...!.))
-      'assignment  (assemble-assignment !)
-      'directive   (assemble-directive !)
-      'string      (assemble-string out .!)
-      'number      (assemble-number out .!)
-      'expression  (assemble-toplevel-expression out !)
-      'identifier  (assemble-identifier out .!)
+      'label        (add-label .! *pc*)
+      'instruction  (funcall #'assemble-instruction out .!. ..!. (assemble-expression ...!.))
+      'assignment   (assemble-assignment !)
+      'directive    (assemble-directive !)
+      'string       (assemble-string out .!)
+      'number       (assemble-number out .!)
+      'expression   (assemble-toplevel-expression out !)
+      'identifier   (assemble-identifier out .!)
       (error "Unexpected parsed line ~A." !))))
 
 (defun assemble-pass (out x)
@@ -106,8 +106,6 @@
                              (with-input-file i _
                                (parse-stream i))]
                             in-names))
-    (format t "Parsed input:~%")
-    (print i)
     (clear-labels)
     (= *pass* 0)
     (assemble-pass-to-file "/dev/null" i)
