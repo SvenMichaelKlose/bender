@@ -1,7 +1,10 @@
-;;;;; bender – Copyright (c) 2014 Sven Michael Klose <pixel@copei.de>
+; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
 (defvar *pc* nil)
 (defvar *pass* nil)
+
+(defun first-pass? ()
+  (zero? *pass*))
 
 (defun assemble-mnemonic-addrmode (mnemonic addrmode)
   (opcode-instruction (generate-opcode mnemonic addrmode)))
@@ -54,7 +57,8 @@
   (++! *pc*))
 
 (defun assemble-identifier (out x)
-  (princ (code-char (get-label x)) out)
+  (alet (string-list x)
+    (princ (code-char (get-label x)) out))
   (++! *pc*))
 
 (defun assemble-toplevel-expression (out x)
@@ -69,10 +73,8 @@
 
 (defun assemble-directive (x)
   (case .x.
-    'org          (= *pc* (assemble-expression ..x.))
-    'open_scope   (open-scope)
-    'close_scope  (close-scope)
-    'fill         (assemble-fill x)
+    'org   (= *pc* (assemble-expression ..x.))
+    'fill  (assemble-fill x)
     (error "Unsupported directive ~A." x)))
 
 (defun assemble-list (out x)
@@ -80,8 +82,7 @@
     (format t "Assembling ~A.~%" !)
     (case !.
       'label       (add-label .! *pc*)
-      'mnemonic    (apply #'assemble-instruction
-                          out (list .!. ..!. (assemble-expression ...!.)))
+      'mnemonic    (funcall #'assemble-instruction out .!. ..!. (assemble-expression ...!.))
       'assignment  (assemble-assignment !)
       'directive   (assemble-directive !)
       'string      (assemble-string out .!)
@@ -93,7 +94,12 @@
 (defun assemble-pass (out x)
   (= *pc* 0)
   (format t "Pass ~A...~%" (++ *pass*))
+  (rewind-labels)
   (assemble-list out x))
+
+(defun assemble-pass-to-file (name i)
+  (with-output-file o name
+    (assemble-pass o i)))
 
 (defun assemble-files (out-name &rest in-names)
   (let i (apply #'+ (filter [(format t "Parsing '~A'.~%" _)
@@ -104,15 +110,11 @@
     (print i)
     (clear-labels)
     (= *pass* 0)
-    (with-output-file o "/dev/null"
-      (assemble-pass o i))
-    (= *scopes* (reverse *scopes*))
+    (assemble-pass-to-file "/dev/null" i)
     (= *label-changed?* t)
     (alet *pc*
       (while *label-changed?*
              nil
         (++! *pass*)
-        (= *scope* *scopes*)
         (= *label-changed?* nil)
-        (with-output-file o out-name
-          (assemble-pass o i))))))
+        (assemble-pass-to-file out-name i)))))

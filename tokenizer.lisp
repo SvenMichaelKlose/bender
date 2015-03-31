@@ -1,6 +1,6 @@
-;;;;; bender – Copyright (c) 2014 Sven Michael Klose <pixel@copei.de>
+; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
-(defvar *char-tokens*
+(defconstant +char-tokens+
     '((#\# . hash)
       (#\, . comma)
       (#\( . bracket-open)
@@ -8,27 +8,32 @@
       (#\: . colon)
       (#\= . assignment)))
 
-(defconstant *directives* '(org open_scope close_scope fill))
+(defconstant +extra-identifier-chars+ '(#\_ #\+ #\-))
+
+(defun extra-identifier-char? (x)
+  (member x +extra-identifier-chars+ :test #'character==))
+
+(defconstant +directives+ '(org fill))
 
 (defun skip-whitespaces (in)
   (alet (peek-char in)
     (unless (end-of-file? in)
       (when (| (control-char? !)
-            (== #\  !))
+               (== #\  !))
         (read-char in)
         (skip-whitespaces in)))))
 
 (defun read-identifier (in)
   (alet (peek-char in)
     (unless (end-of-file? in)
-       (& (| (alpha-char? !)
-             (digit-char? !)
-             (== #\_ !))
-          (. (read-char in)
-             (read-identifier in))))))
+      (& (| (alpha-char? !)
+            (digit-char? !)
+            (extra-identifier-char? !))
+         (. (read-char in)
+            (read-identifier in))))))
 
 (defun directive? (x)
-  (member x *directives* :test #'eq))
+  (member x +directives+ :test #'eq))
 
 (defun mnemonic? (x)
   (member x *mnemonic-list* :test #'eq))
@@ -38,8 +43,8 @@
     (let n (list-string !)
       (alet (make-symbol (upcase n))
         (?
-          (directive? !) (. 'directive !)
-          (mnemonic? !)  (. 'mnemonic !)
+          (directive? !)  (. 'directive !)
+          (mnemonic? !)   (. 'mnemonic !)
           (. 'identifier n))))))
 
 (defun tokenize-decimal (in)
@@ -65,7 +70,7 @@
 (defun tokenize (in)
   (skip-whitespaces in)
   (alet (peek-char in)
-    (let ct (member-if [== ! _.] *char-tokens*)
+    (let ct (member-if [== ! _.] +char-tokens+)
       (? ct
          (progn
            (read-char in)
