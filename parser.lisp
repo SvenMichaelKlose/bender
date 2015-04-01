@@ -35,9 +35,9 @@
          (list 'abs x.)
          (? (comma? .x.)
             (? (identifier? ..x.)
-               (list (?
-                       (string== "X" (upcase (cdr ..x.)))  'absx
-                       (string== "Y" (upcase (cdr ..x.)))  'absy
+               (list (case (cdr ..x.)
+                       'x  'absx
+                       'y  'absy
                        (error "Index register expected instead of '~A'." (cdr ..x.)))
                      x.)
                (error "Index register expected."))
@@ -50,7 +50,7 @@
            (?
              (comma? ...x.)
                (?
-                 (string== "Y" (upcase (cdr ....x.)))  (list 'izpy .x.)
+                 (eq 'y (cdr ....x.))  (list 'izpy .x.)
                  (error "Index register Y expected."))
              ...x.
                (error "Comma or end of line expected instead of ~A." (car ...x.))
@@ -58,7 +58,7 @@
            (comma? ..x.)
              (? (identifier? ...x.)
                 (?
-                  (string== "X" (upcase (cdr ...x.)))
+                  (eq 'x (cdr ...x.))
                     (? (bracket-close? ....x.)
                        (list 'izpx .x.)
                        (error "Closing bracket expected instead of ~A." ....x.))

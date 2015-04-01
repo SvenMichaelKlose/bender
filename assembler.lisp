@@ -82,7 +82,8 @@
     (format t "Assembling: ~A~%" !)
     (case !.
       'label        (add-label .! *pc*)
-      'instruction  (funcall #'assemble-instruction out .!. ..!. (assemble-expression ...!.))
+      'instruction  (funcall #'assemble-instruction
+                             out .!. ..!. (assemble-expression ...!.))
       'assignment   (assemble-assignment !)
       'directive    (assemble-directive !)
       'string       (assemble-string out .!)
