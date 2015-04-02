@@ -1,4 +1,4 @@
-;;;;; bender – Copyright (c) 2014 Sven Michael Klose <pixel@copei.de>
+; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
 (defun print-byte (x o)
   (princ (code-char x) o))
@@ -40,7 +40,7 @@
   (adotimes #x14
     (read-char i))
   (with-queue q
-    (while (not (end-of-file? i))
+    (while (peek-char i)
            nil
       (alet (half (alet (read-char i)
                     (? (zero? !)

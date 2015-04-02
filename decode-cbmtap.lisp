@@ -1,4 +1,4 @@
-;;;;; bender – Copyright (c) 2014 Sven Michael Klose <pixel@copei.de>
+; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
 (defun decode-cbmtap-byte (o x)
   (when x
@@ -21,7 +21,7 @@
 (defun decode-cbmtap (in-name out-name)
   (with-queue q
     (with-input-file i in-name
-      (while (not (end-of-file? i))
+      (while (peek-char i)
              nil
         (enqueue q (read-char i))))
     (with-output-file o out-name
