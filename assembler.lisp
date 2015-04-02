@@ -17,12 +17,20 @@
                      (eval (macroexpand (labels-to-exprs .x)))))
      0))
 
+(defun dump-byte (x)
+  (print-hexbyte x)
+  (princ " ")
+  x)
+
+(defun assemble-byte (x out)
+  (princ (code-char (dump-byte x)) out)
+  (++! *pc*))
+
 (defun assemble-operand (out inst operand)
   (when (eq 'branch (instruction-addrmode inst))
     (= operand (- operand *pc* 1)))
   (dotimes (i (instruction-operand-size inst))
-    (princ (code-char (mod operand 256)) out)
-    (++! *pc*)
+    (assemble-byte (mod operand 256) out)
     (= operand (>> operand 8))))
 
 (defun check-branch-range (inst operand)
@@ -41,8 +49,7 @@
     (= (instruction-operand inst) operand)
     (check-branch-range inst operand)
     (instruction-optimize-addrmode inst)
-    (princ (code-char (instruction-opcode inst)) out)
-    (++! *pc*)
+    (assemble-byte (instruction-opcode inst) out)
     (assemble-operand out inst operand)))
 
 (defun assemble-assignment (x)
@@ -80,7 +87,9 @@
 
 (defun assemble-list (out x)
   (adolist x
-    (format t "Assembling: ~A~%" !)
+    (format t "~LAssembling: ~A~%" !)
+    (print-hexword *pc*)
+    (princ ": ")
     (case !.
       'label        (add-label .! *pc*)
       'instruction  (funcall #'assemble-instruction
@@ -110,11 +119,10 @@
                             in-names))
     (clear-labels)
     (= *pass* 0)
-    (assemble-pass-to-file "/dev/null" i)
-    (= *label-changed?* t)
     (alet *pc*
-      (while *label-changed?*
+      (while (| *label-changed?*
+                (< *pass* 2))
              nil
-        (++! *pass*)
         (= *label-changed?* nil)
-        (assemble-pass-to-file out-name i)))))
+        (assemble-pass-to-file out-name i)
+        (++! *pass*)))))
