@@ -10,12 +10,12 @@
   (opcode-instruction (generate-opcode mnemonic addrmode)))
 
 (defun assemble-expression (x)
-  (case x.
-    'number      .x
-    'identifier  (get-label .x)
-    'expression  (? (zero? *pass*)
-                    0
-                    (eval (macroexpand (labels-to-exprs .x))))))
+  (| (case x.
+      'number      .x
+      'identifier  (get-label .x :required? (not (first-pass?)))
+      'expression  (unless (first-pass?)
+                     (eval (macroexpand (labels-to-exprs .x)))))
+     0))
 
 (defun assemble-operand (out inst operand)
   (when (eq 'branch (instruction-addrmode inst))
@@ -58,7 +58,9 @@
 
 (defun assemble-identifier (out x)
   (alet (string-list x)
-    (princ (code-char (get-label x)) out))
+    (princ (code-char (| (get-label x :required? (not (first-pass?)))
+                         0)) 
+           out))
   (++! *pc*))
 
 (defun assemble-toplevel-expression (out x)
