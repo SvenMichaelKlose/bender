@@ -66,16 +66,16 @@
   (princ (code-char (assemble-expression x)) out)
   (++! *pc*))
 
-(defun assemble-fill (x)
+(defun assemble-fill (out x)
   (when (< 1 *pass*)
     (adotimes ((assemble-expression ..x.))
       (princ (code-char 0) out)
       (++! *pc*))))
 
-(defun assemble-directive (x)
+(defun assemble-directive (out x)
   (case .x.
     'org   (= *pc* (assemble-expression ..x.))
-    'fill  (assemble-fill x)
+    'fill  (assemble-fill out x)
     (error "Unsupported directive ~A." x)))
 
 (defun assemble-list (out x)
@@ -86,7 +86,7 @@
       'instruction  (funcall #'assemble-instruction
                              out .!. ..!. (assemble-expression ...!.))
       'assignment   (assemble-assignment !)
-      'directive    (assemble-directive !)
+      'directive    (assemble-directive out !)
       'string       (assemble-string out .!)
       'number       (assemble-number out .!)
       'expression   (assemble-toplevel-expression out !)
