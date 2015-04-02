@@ -57,10 +57,9 @@
   (++! *pc*))
 
 (defun assemble-identifier (out x)
-  (alet (string-list x)
-    (princ (code-char (| (get-label x :required? (not (first-pass?)))
-                         0)) 
-           out))
+  (princ (code-char (| (get-label x :required? (not (first-pass?)))
+                       0))
+         out)
   (++! *pc*))
 
 (defun assemble-toplevel-expression (out x)
