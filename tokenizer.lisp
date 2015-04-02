@@ -66,7 +66,7 @@
 
 (defun tokenize (in)
   (skip-whitespaces in)
-  (alet (peek-char in)
+  (awhen (peek-char in)
     (let ct (member-if [== ! _.] +char-tokens+)
       (? ct
          (progn
