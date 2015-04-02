@@ -43,8 +43,8 @@
          next  (get-next-label x :required? nil))
     (& required? prev next
        (error "Label ~A appears in previous and later code. Please specify a direction." x))
-    (? required?
-       (| prev next
+    (| prev next
+       (& required?
           (error "Label ~A is not defined." x)))))
 
 (defun get-label (x &key (required? t))
