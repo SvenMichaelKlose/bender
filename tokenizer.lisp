@@ -40,12 +40,13 @@
   (member x *mnemonic-list* :test #'eq))
 
 (defun tokenize-identifier (in)
-  (awhen (make-symbol (upcase (list-string (read-identifier in))))
-    (. (?
-         (directive? !)  'directive
-         (mnemonic? !)   'mnemonic
-         'identifier)
-       !)))
+  (!? (read-identifier in)
+      (alet (make-symbol (upcase (list-string !)))
+        (. (?
+             (directive? !)  'directive
+             (mnemonic? !)   'mnemonic
+             'identifier)
+            !))))
 
 (defun tokenize-decimal (in)
   (when (peek-char in)
