@@ -80,7 +80,7 @@
       (digit-char? !)  (tokenize-decimal in)
       (| (tokenize-identifier in)
          (? (control-char? !)
-            (read-char in)
+            (& (read-char in) nil)
             (error "Unexpected character ~A." (read-char in)))))))
 
 (defun tokenize-line (in)
