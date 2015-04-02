@@ -8,7 +8,10 @@
       (#\: . colon)
       (#\= . assignment)))
 
-(defconstant +extra-identifier-chars+ '(#\_ #\+ #\-))
+(defun char-token (x)
+  (cdar (member-if [== x _.] +char-tokens+)))
+
+(defconstant +extra-identifier-chars+ '(#\_ #\+ #\- #\< #\>))
 
 (defun extra-identifier-char? (x)
   (member x +extra-identifier-chars+ :test #'character==))
@@ -67,22 +70,18 @@
 (defun tokenize (in)
   (skip-whitespaces in)
   (awhen (peek-char in)
-    (let ct (member-if [== ! _.] +char-tokens+)
-      (? ct
-         (progn
-           (read-char in)
-           (list (cdr ct.)))
-         (?
-           (== ! #\")       (tokenize-string in)
-           (== ! #\@)       (tokenize-expression in)
-           (== ! #\$)       (tokenize-hexadecimal in)
-           (== ! #\%)       (tokenize-binary in)
-           (== ! #\;)       (& (read-line in) nil)
-           (digit-char? !)  (tokenize-decimal in)
-           (| (tokenize-identifier in)
-              (? (control-char? !)
-                 (read-char in)
-                 (error "Unexpected character ~A." (read-char in)))))))))
+    (?
+      (char-token !)   (list (char-token (read-char in)))
+      (== ! #\")       (tokenize-string in)
+      (== ! #\@)       (tokenize-expression in)
+      (== ! #\$)       (tokenize-hexadecimal in)
+      (== ! #\%)       (tokenize-binary in)
+      (== ! #\;)       (& (read-line in) nil)
+      (digit-char? !)  (tokenize-decimal in)
+      (| (tokenize-identifier in)
+         (? (control-char? !)
+            (read-char in)
+            (error "Unexpected character ~A." (read-char in)))))))
 
 (defun tokenize-line (in)
   (when (peek-char in)
