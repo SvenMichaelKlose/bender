@@ -56,28 +56,24 @@
   (add-label .x. (assemble-expression ..x.)))
 
 (defun assemble-string (out x)
-  (princ x out)
-  (+! *pc* (length x)))
+  (adolist ((string-list x))
+    (assemble-byte (char-code !) out)))
 
 (defun assemble-number (out x)
-  (princ (code-char x) out)
-  (++! *pc*))
+  (assemble-byte x out))
 
 (defun assemble-identifier (out x)
-  (princ (code-char (| (get-label x :required? (not (first-pass?)))
-                       0))
-         out)
-  (++! *pc*))
+  (assemble-byte (| (get-label x :required? (not (first-pass?)))
+                       0)
+                 out))
 
 (defun assemble-toplevel-expression (out x)
-  (princ (code-char (assemble-expression x)) out)
-  (++! *pc*))
+  (assemble-byte (assemble-expression x) out))
 
 (defun assemble-fill (out x)
   (when (< 1 *pass*)
     (adotimes ((assemble-expression ..x.))
-      (princ (code-char 0) out)
-      (++! *pc*))))
+      (assemble-byte 0 out))))
 
 (defun assemble-directive (out x)
   (case .x.
@@ -106,7 +102,8 @@
   (= *pc* 0)
   (format t "Pass ~A...~%" (++ *pass*))
   (rewind-labels)
-  (assemble-list out x))
+  (assemble-list out x)
+  (fresh-line))
 
 (defun assemble-pass-to-file (name i)
   (with-output-file o name
