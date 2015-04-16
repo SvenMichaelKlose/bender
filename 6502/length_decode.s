@@ -1,6 +1,6 @@
 ; 6502 operand length decoder
 ;
-; bender – Copyright (c) 2014 Sven Michael Klose <pixel@copei.de>
+; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
 operand_lengths:
     1   1   1
@@ -23,7 +23,6 @@ char legal_addrmodes:
     %00001100 %11111111 %11111111
 
 length_decode:
-open_scope
     cmp #$20                ; JSR?
     bne no_jsr
     lda #2
@@ -58,9 +57,9 @@ not_implied:
     tay
     lda legal_addrmodes,x
 l:  dey
-    bmi d
+    bmi +d
     asl
-    jmp l
+    jmp -l
 d:  asl
     pla
     bcc no_illegal_bb
@@ -77,4 +76,3 @@ get_operand_length:
     tax
     lda operand_lengths,x
     rts
-close_scope
