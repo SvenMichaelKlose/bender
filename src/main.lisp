@@ -1,0 +1,25 @@
+; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
+
+(load "./environment/platforms/shared/read-binary.lisp")
+(load "./environment/platforms/shared/xml2lml.lisp")
+
+(load "src/6502.lisp")
+(load "src/instruction.lisp")
+(load "src/print.lisp")
+(load "src/disassembler.lisp")
+(load "src/instruction-map.lisp")
+(load "src/labels.lisp")
+(load "src/tokenizer.lisp")
+(load "src/parser.lisp")
+(load "src/labels-to-exprs.lisp")
+(load "src/helpers.lisp")
+(load "src/assembler.lisp")
+(load "src/vice.lisp")
+(load "src/bin2cbmtap.lisp")
+(load "src/decode-cbmtap.lisp")
+(load "src/tap.lisp")
+(load "src/tap2wav.lisp")
+(load "src/tests.lisp")
+
+(dump-system "bender")
+(quit)
