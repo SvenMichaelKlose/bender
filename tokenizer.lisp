@@ -37,7 +37,11 @@
   (member x +directives+ :test #'eq))
 
 (defun mnemonic? (x)
-  (member x *mnemonic-list* :test #'eq))
+  (member (case x :test #'eq
+            'blt 'bcc
+            'bge 'bcs
+            x)
+          *mnemonic-list* :test #'eq))
 
 (defun tokenize-identifier (in)
   (!? (read-identifier in)
