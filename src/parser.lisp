@@ -95,7 +95,11 @@
 
 (defun parse (x)
   (awhen (parse-labels x)
-    (parse-0 !)))
+    (with (f [? (& (cons? _)
+                   (in? _. 'number 'string)) ._
+                (cons? _)  (. (f _.) (f ._))
+                _])
+      (f (parse-0 !)))))
 
 (defun parse-stream (i)
   (with-queue q

@@ -10,11 +10,11 @@
   (opcode-instruction (generate-opcode mnemonic addrmode)))
 
 (defun assemble-expression (x)
-  (| (case x.
-      'number      .x
-      'identifier  (get-label .x :required? (not (first-pass?)))
-      'expression  (unless (first-pass?)
-                     (eval (macroexpand (labels-to-exprs .x)))))
+  (| (& (number? x) x)
+     (case x.
+       'expression  (unless (first-pass?)
+                      (eval (macroexpand (labels-to-exprs .x))))
+       'identifier  (get-label .x :required? (not (first-pass?))))
      0))
 
 (defun dump-byte (x)
@@ -86,17 +86,18 @@
     (format t "~LAssembling: ~A~%" !)
     (print-hexword *pc*)
     (princ ": ")
-    (case !.
-      'label        (add-label .! *pc*)
-      'instruction  (funcall #'assemble-instruction
-                             out .!. ..!. (assemble-expression ...!.))
-      'assignment   (assemble-assignment !)
-      'directive    (assemble-directive out !)
-      'string       (assemble-string out .!)
-      'number       (assemble-number out .!)
-      'expression   (assemble-toplevel-expression out !)
-      'identifier   (assemble-identifier out .!)
-      (error "Unexpected parsed line ~A." !))))
+    (?
+      (string? !)  (assemble-string out !)
+      (number? !)  (assemble-number out !)
+      (case !.
+        'label        (add-label .! *pc*)
+        'instruction  (funcall #'assemble-instruction
+                               out .!. ..!. (assemble-expression ...!.))
+        'assignment   (assemble-assignment !)
+        'directive    (assemble-directive out !)
+        'identifier   (assemble-identifier out .!)
+        'expression   (assemble-toplevel-expression out !)
+        (error "Unexpected parser expression ~A." !)))))
 
 (defun assemble-pass (out x)
   (= *pc* 0)
