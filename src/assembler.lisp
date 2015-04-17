@@ -51,7 +51,7 @@
     (instruction-optimize-addrmode inst)
     (assemble-byte (instruction-opcode inst) out)
     (assemble-operand out inst operand)
-    (format t "(~A)" (instruction-cycles mnemonic (instruction-addrmode inst)))))
+    (format t "(~A)" (instruction-cycles inst))))
 
 (defun assemble-assignment (x)
   (add-label .x. (assemble-expression ..x.)))
