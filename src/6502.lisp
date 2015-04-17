@@ -57,3 +57,37 @@
 
 (defun mnemonic? (x)                                                            
   (some [member ! x :test #'eq] *mnemonics*))
+
+(defconstant +addrmode-cycles+
+             '((accu . 2)
+               (imm . 2)
+               (branch . 2)
+               (zp . 3)
+               (zpx . 4)
+               (abs . 4)
+               (absx . 4)
+               (absy . 4)
+               (izpx . 6)
+               (izpy . 5)
+               (indi . 5)))
+
+(defconstant +rw-addrmode-cycles+
+             '((accu . 2)
+               (zp . 5)
+               (zpx . 6)
+               (abs . 6)
+               (absx . 7)))
+
+(defconstant +instruction-cycles+
+             '((pha . 3)
+               (php . 3)
+               (pla . 4)
+               (plp . 4)
+               (brk . 7)
+               (rts . 6)
+               (rti . 6)
+               (jsr . 6)))
+
+(defconstant +rw-instructions+ '(asl dec inc lsr rol ror))
+
+(defconstant +stack-instructions+ '(pha php pla plp))

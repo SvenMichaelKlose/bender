@@ -50,7 +50,8 @@
     (check-branch-range inst operand)
     (instruction-optimize-addrmode inst)
     (assemble-byte (instruction-opcode inst) out)
-    (assemble-operand out inst operand)))
+    (assemble-operand out inst operand)
+    (format t "(~A)" (instruction-cycles mnemonic (instruction-addrmode inst)))))
 
 (defun assemble-assignment (x)
   (add-label .x. (assemble-expression ..x.)))
