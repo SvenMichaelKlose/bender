@@ -5,4 +5,4 @@
   (with-output-file o out-name
     (format o "; For VICE with command line option -moncommands ~A" out-name)
     (adolist ((+ (reverse *previous-labels*) *next-labels*))
-      (format o "al ~A .~A~%" (print-hexword .! nil) !.))))
+      (format o "al ~A .~A~%" (print-hexword .! nil) (downcase (symbol-name !.))))))
