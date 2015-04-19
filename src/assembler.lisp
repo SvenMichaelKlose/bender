@@ -1,5 +1,6 @@
 ; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
+(defvar *current-line* nil)
 (defvar *pc* nil)
 (defvar *pass* nil)
 
@@ -17,20 +18,15 @@
        'identifier  (get-label .x :required? (not (first-pass?))))
      0))
 
-(defun dump-byte (x)
-  (print-hexbyte x)
-  (princ " ")
-  x)
-
-(defun assemble-byte (x out)
-  (princ (code-char (dump-byte x)) out)
+(defun assemble-byte (out x)
+  (princ (code-char x) out)
   (++! *pc*))
 
 (defun assemble-operand (out inst operand)
   (when (eq 'branch (instruction-addrmode inst))
     (= operand (- operand *pc* 1)))
   (dotimes (i (instruction-operand-size inst))
-    (assemble-byte (mod operand 256) out)
+    (assemble-byte out (mod operand 256))
     (= operand (>> operand 8))))
 
 (defun check-branch-range (inst operand)
@@ -49,32 +45,33 @@
     (= (instruction-operand inst) operand)
     (check-branch-range inst operand)
     (instruction-optimize-addrmode inst)
-    (assemble-byte (instruction-opcode inst) out)
-    (assemble-operand out inst operand)
-    (format t "(~A)" (instruction-cycles inst))))
+    (assemble-byte out (instruction-opcode inst))
+    (assemble-operand out inst operand)))
 
 (defun assemble-assignment (x)
   (add-label .x. (assemble-expression ..x.)))
 
 (defun assemble-string (out x)
   (adolist ((string-list x))
-    (assemble-byte (char-code !) out)))
+    (assemble-byte out (char-code !))))
 
 (defun assemble-number (out x)
-  (assemble-byte x out))
+  (assemble-byte out x))
 
 (defun assemble-identifier (out x)
-  (assemble-byte (| (get-label x :required? (not (first-pass?)))
-                       0)
-                 out))
+  (assemble-byte out (| (get-label x :required? (not (first-pass?)))
+                        0)))
 
 (defun assemble-toplevel-expression (out x)
-  (assemble-byte (assemble-expression x) out))
+  (alet (assemble-expression x)
+    (? (cons? !)
+       (assemble-list out !)
+       (assemble-byte out !))))
 
 (defun assemble-fill (out x)
   (when (< 1 *pass*)
     (adotimes ((assemble-expression ..x.))
-      (assemble-byte 0 out))))
+      (assemble-byte out 0))))
 
 (defun assemble-directive (out x)
   (case .x.
@@ -84,9 +81,6 @@
 
 (defun assemble-list (out x)
   (adolist x
-    (format t "~LAssembling: ~A~%" !)
-    (print-hexword *pc*)
-    (princ ": ")
     (?
       (string? !)  (assemble-string out !)
       (number? !)  (assemble-number out !)
@@ -102,7 +96,6 @@
 
 (defun assemble-pass (out x)
   (= *pc* 0)
-  (format t "Pass ~A...~%" (++ *pass*))
   (rewind-labels)
   (assemble-list out x)
   (fresh-line))
@@ -112,7 +105,7 @@
     (assemble-pass o i)))
 
 (defun assemble-files (out-name &rest in-names)
-  (let i (apply #'+ (filter [(format t "Parsing '~A'.~%" _)
+  (let i (apply #'+ (filter [(format t "Parsing '~A'…~%" _)
                              (with-input-file i _
                                (parse-stream i))]
                             in-names))
@@ -123,5 +116,5 @@
                 (< *pass* 2))
              nil
         (= *label-changed?* nil)
-        (assemble-pass-to-file out-name i)
+        (assemble-pass-to-file out-name (apply #'+ (cdrlist i)))
         (++! *pass*)))))

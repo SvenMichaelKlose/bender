@@ -104,9 +104,8 @@
 (defun parse-stream (i)
   (with-queue q
     (while (peek-char i)
-           (apply #'+ (queue-list q))
+           (queue-list q)
       (alet (read-line i)
-        (format t "~LParsing: ~A" !)
         (with-stream-string line !
-          (!? (parse (remove-if #'not (tokenize-line line)))
-              (enqueue q !)))))))
+          (let-when parsed (parse (remove-if #'not (tokenize-line line)))
+              (enqueue q (. ! parsed))))))))
