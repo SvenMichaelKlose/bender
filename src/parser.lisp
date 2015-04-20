@@ -109,3 +109,9 @@
         (with-stream-string line !
           (let-when parsed (parse (remove-if #'not (tokenize-line line)))
               (enqueue q (. ! parsed))))))))
+
+(defun parse-files (filepaths)
+  (apply #'+ (filter [(format t "Parsing '~A'…~%" _)
+                      (with-input-file i _
+                        (parse-stream i))]
+                     filepaths)))

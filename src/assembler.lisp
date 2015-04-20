@@ -105,10 +105,7 @@
     (assemble-pass o i)))
 
 (defun assemble-files (out-name &rest in-names)
-  (let i (apply #'+ (filter [(format t "Parsing '~A'…~%" _)
-                             (with-input-file i _
-                               (parse-stream i))]
-                            in-names))
+  (let parsed (parse-files in-names)
     (clear-labels)
     (= *pass* 0)
     (alet *pc*
@@ -116,5 +113,5 @@
                 (< *pass* 2))
              nil
         (= *label-changed?* nil)
-        (assemble-pass-to-file out-name (apply #'+ (cdrlist i)))
+        (assemble-pass-to-file out-name (apply #'+ (cdrlist parsed)))
         (++! *pass*)))))
