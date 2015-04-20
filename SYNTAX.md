@@ -18,7 +18,7 @@ operand.  Comments start with a semicolon.
 ## Literals
 
 
-Bytes, words and strings can be written without directives. Words must have
+Bytes, words and strings don't need red tape . Words must have
 enough leading zeroes:
 
 ```
@@ -74,8 +74,32 @@ l1:
 
 ## Applying Lisp expressions
 
-Lisp expressions can be inserted with the @ character.
+Lisp expressions can be inserted with the @ character.  Line breaks
+are not allowed inside them.
 
 ```
     ldx #@(- table_end table_start) ; Load X with size of table.
 ```
+
+Expressions can be used at toplevel as well.
+
+```
+; Make a PETSCIIZ string at compile-time.
+text: @(@ #'ascii2petscii (string-list "Hello world!"))
+      0
+```
+
+Toplevel expressions are expected to return numbers, strings or a
+lists of parsed expressions.  A parsed expression can be a number,
+a string or an expression of the following form:
+
+```
+(LABEL . name)
+(IDENTIFIER . name)
+(DIRECTIVE name parameters)
+(INSTRUCTION mnemonic addressing-mode operand)
+(EXPRESSION . tré-expression)
+```
+
+IDENTIFIER gets the value of a label.  An operand can be a number,
+IDENTIFIER or EXPRESSION.
