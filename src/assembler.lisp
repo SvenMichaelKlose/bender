@@ -65,7 +65,7 @@
 (defun assemble-toplevel-expression (out x)
   (alet (assemble-expression x)
     (? (cons? !)
-       (assemble-list out !)
+       (assemble-list out (@ [. nil _] !))
        (assemble-byte out !))))
 
 (defun assemble-fill (out x)
@@ -79,30 +79,50 @@
     'fill  (assemble-fill out x)
     (error "Unsupported directive ~A." x)))
 
+(defun assemble (out x)
+  (?
+    (string? x)  (assemble-string out x)
+    (number? x)  (assemble-number out x)
+    (case x.
+      'label        (add-label .x *pc*)
+      'instruction  (funcall #'assemble-instruction
+                             out .x. ..x. (assemble-expression ...x.))
+      'assignment   (assemble-assignment x)
+      'directive    (assemble-directive out x)
+      'identifier   (assemble-identifier out .x)
+      'expression   (assemble-toplevel-expression out x)
+      (error "Unexpected parser expression ~A." x))))
+
 (defun assemble-list (out x)
+  (print x)
   (adolist x
-    (?
-      (string? !)  (assemble-string out !)
-      (number? !)  (assemble-number out !)
-      (case !.
-        'label        (add-label .! *pc*)
-        'instruction  (funcall #'assemble-instruction
-                               out .!. ..!. (assemble-expression ...!.))
-        'assignment   (assemble-assignment !)
-        'directive    (assemble-directive out !)
-        'identifier   (assemble-identifier out .!)
-        'expression   (assemble-toplevel-expression out !)
-        (error "Unexpected parser expression ~A." !)))))
+    (let line !.
+    (adolist (.!)
+      (let pc *pc*
+        (with-string-stream o
+          (assemble o !)
+          (let bytes (get-stream-string o)
+            (when bytes
+              (fresh-line)
+              (print-hexword pc)
+              (princ ":")
+              (adolist ((string-list bytes))
+                (princ " ")
+                (print-hexbyte (char-code !))))
+            (while (< (stream-location-column (stream-output-location *standard-output*)) 24)
+                   nil
+              (princ " "))
+            (princ line)
+            (princ bytes out))))))))
 
 (defun assemble-pass (out x)
   (= *pc* 0)
   (rewind-labels)
-  (assemble-list out x)
-  (fresh-line))
+  (assemble-list out x))
 
 (defun assemble-pass-to-file (name i)
-  (with-output-file o name
-    (assemble-pass o i)))
+  (with-output-file out name
+    (assemble-pass out i)))
 
 (defun assemble-files (out-name &rest in-names)
   (let parsed (parse-files in-names)
@@ -113,5 +133,5 @@
                 (< *pass* 2))
              nil
         (= *label-changed?* nil)
-        (assemble-pass-to-file out-name (apply #'+ (cdrlist parsed)))
+        (assemble-pass-to-file out-name parsed)
         (++! *pass*)))))
