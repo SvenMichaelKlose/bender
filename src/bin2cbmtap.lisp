@@ -1,4 +1,4 @@
-;;;;; bender – Copyright (c) 2014 Sven Michael Klose <pixel@copei.de>
+; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@hugbox.org>
 
 (defconstant +short+  #x2c)  ;#x30)
 (defconstant +medium+ #x3f)  ;#x42)
@@ -42,11 +42,11 @@
 (defvar *chk* 0)
 
 (defun write-byte (o x)
-  (= *chk* (logxor *chk* x))
+  (= *chk* (bit-xor *chk* x))
   (write-sod o)
   (let chk 1
     (dotimes (i 8)
-      (= chk (logxor chk (bit-and x 1)))
+      (= chk (bit-xor chk (bit-and x 1)))
       (write-bit o (bit-and x 1))
       (= x (>> x 1)))
     (write-bit o chk)))
