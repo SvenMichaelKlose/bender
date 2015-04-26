@@ -65,7 +65,7 @@
 (defun assemble-toplevel-expression (out x)
   (alet (assemble-expression x)
     (? (cons? !)
-       (assemble-list out (@ [. nil _] !))
+       (assemble-list out (list (. nil !)))
        (assemble-byte out !))))
 
 (defun assemble-fill (out x)
@@ -94,7 +94,6 @@
       (error "Unexpected parser expression ~A." x))))
 
 (defun assemble-list (out x)
-  (print x)
   (adolist x
     (let line !.
     (adolist (.!)
@@ -109,7 +108,7 @@
               (adolist ((string-list bytes))
                 (princ " ")
                 (print-hexbyte (char-code !))))
-            (while (< (stream-location-column (stream-output-location *standard-output*)) 24)
+            (while (< (stream-location-column (stream-output-location *standard-output*)) 22)
                    nil
               (princ " "))
             (princ line)
