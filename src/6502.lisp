@@ -1,4 +1,4 @@
-;;;;; bender – Copyright (c) 2014 Sven Michael Klose <pixel@copei.de>
+; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
 (defconstant *mnemonics*
     '((nil bit jmp jmp      ; CC == 0
@@ -56,7 +56,7 @@
         ( t   t   t   t   t   t  t   t )))) ; absolute X (Y for LDX and STX)
 
 (defun mnemonic? (x)                                                            
-  (some [member ! x :test #'eq] *mnemonics*))
+  (some [member _ :test #'eq] *mnemonics*))
 
 (defconstant +addrmode-cycles+
              '((accu . 2)
