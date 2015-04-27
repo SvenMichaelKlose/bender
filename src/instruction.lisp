@@ -27,14 +27,21 @@
 
 (def-instruction instruction-optimize-addrmode (instruction)
   (unless (in? mnemonic 'jmp 'jsr)
+    (= (instruction-addrmode instruction)
+       (case addrmode
+         'zp   'abs
+         'zpx  'absx
+         'zpy  'absy
+         addrmode))
+    (= addrmode (instruction-addrmode instruction))
     (when (& operand (< operand 256))
       (= (instruction-addrmode instruction)
          (case addrmode
            'abs   'zp
            'absx  'zpx
            'absy  (?
-                    (in? mnemonic 'lda 'sta 'sbc) 'absy
-                    (in? mnemonic 'ldx 'stx) 'zpx
-                    'zpy)
+                    (in? mnemonic 'lda 'sta 'sbc)  'absy
+                    (in? mnemonic 'ldx 'stx)       'zpx
+                    addrmode)
            addrmode))
       (= (instruction-opcode instruction) (generate-opcode mnemonic (instruction-addrmode instruction))))))
