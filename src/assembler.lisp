@@ -64,9 +64,10 @@
 
 (defun assemble-toplevel-expression (out x)
   (alet (assemble-expression x)
-    (? (cons? !)
-       (assemble-list out (list (. nil !)))
-       (assemble-byte out !))))
+    (?
+      (cons? !)    (assemble-list out (list (. nil !)))
+      (string? !)  (assemble-string out !)
+      (assemble-byte out !))))
 
 (defun assemble-fill (out x)
   (when (< 1 *pass*)
