@@ -5,7 +5,7 @@
 (defvar *pass* nil)
 
 (defun first-pass? ()
-  (< *pass* 2))
+  (< *pass* 1))
 
 (defun assemble-mnemonic-addrmode (mnemonic addrmode)
   (opcode-instruction (generate-opcode mnemonic addrmode)))
@@ -30,7 +30,7 @@
     (= operand (>> operand 8))))
 
 (defun check-branch-range (inst operand)
-  (& (< 1 *pass*)
+  (& (< 2 *pass*)
      (eq 'branch (instruction-addrmode inst))
      (alet (- operand *pc*)
        (& (| (< ! -128)
