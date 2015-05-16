@@ -5,7 +5,7 @@
 (defvar *pass* nil)
 
 (defun first-pass? ()
-  (zero? *pass*))
+  (< *pass* 2))
 
 (defun assemble-mnemonic-addrmode (mnemonic addrmode)
   (opcode-instruction (generate-opcode mnemonic addrmode)))

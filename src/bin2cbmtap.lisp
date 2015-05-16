@@ -93,8 +93,8 @@
   (unless (== 2 type)
     (write-byte o (mod start 256))
     (write-byte o (>> start 8))
-    (write-byte o (mod end 256))
-    (write-byte o (>> end 8))
+    (write-byte o (mod (++ end) 256))
+    (write-byte o (>> (++ end) 8))
     (dolist (i (string-list name))
       (write-byte o i))
     (dotimes (i (- 187 (length name)))
@@ -116,6 +116,7 @@
   (= *chk* 0)
   (adolist data
     (write-byte o !))
+  (write-byte o 0)
   (write-byte o *chk*)
   (write-eod o)
   (when repeated?
