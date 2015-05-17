@@ -4,6 +4,7 @@
 
 code = @*pc*
 
+    org 0
     data
 accu:           0 0 ; 16-bit accu
 s:              0 0 ; source pointer
