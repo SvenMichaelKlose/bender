@@ -16,7 +16,7 @@
 (defun extra-identifier-char? (x)
   (member x +extra-identifier-chars+ :test #'character==))
 
-(defconstant +directives+ '(org fill))
+(defconstant +directives+ '(org fill if end))
 
 (defun skip-whitespaces (in)
   (awhen (peek-char in)

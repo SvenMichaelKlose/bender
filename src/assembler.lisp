@@ -3,6 +3,8 @@
 (defvar *current-line* nil)
 (defvar *pc* nil)
 (defvar *pass* nil)
+(defvar *disabled?* nil)
+(defvar *block-stack* nil)
 
 (defun first-pass? ()
   (< *pass* 1))
@@ -74,10 +76,21 @@
     (adotimes ((assemble-expression ..x.))
       (assemble-byte out 0))))
 
+(defun assemble-if (out x)
+  (push *disabled?* *block-stack*)
+  (= *disabled?* (not (assemble-expression ..x.))))
+
+(defun assemble-end ()
+  (| *block-stack*
+     (error "Unexpected directive 'end'."))
+  (= *disabled?* (pop *block-stack*)))
+
 (defun assemble-directive (out x)
   (case .x.
     'org   (= *pc* (assemble-expression ..x.))
     'fill  (assemble-fill out x)
+    'if    (assemble-if out x)
+    'end   (assemble-end)
     (error "Unsupported directive ~A." x)))
 
 (defun assemble (out x)
@@ -94,26 +107,34 @@
       'expression   (assemble-toplevel-expression out x)
       (error "Unexpected parser expression ~A." x))))
 
+(defun assemble-and-dump (out x line)
+  (with-string-stream o
+    (let pc *pc*
+      (assemble o x)
+      (let bytes (get-stream-string o)
+        (when bytes
+          (fresh-line)
+          (print-hexword pc)
+          (princ ":")
+          (adolist ((string-list bytes))
+            (princ " ")
+            (print-hexbyte (char-code !))))
+        (while (< (stream-location-column (stream-output-location *standard-output*)) 22)
+               nil
+          (princ " "))
+        (princ line)
+        (princ bytes out)))))
+
 (defun assemble-list (out x)
   (adolist x
     (let line !.
-    (adolist (.!)
-      (let pc *pc*
-        (with-string-stream o
-          (assemble o !)
-          (let bytes (get-stream-string o)
-            (when bytes
-              (fresh-line)
-              (print-hexword pc)
-              (princ ":")
-              (adolist ((string-list bytes))
-                (princ " ")
-                (print-hexbyte (char-code !))))
-            (while (< (stream-location-column (stream-output-location *standard-output*)) 22)
-                   nil
-              (princ " "))
-            (princ line)
-            (princ bytes out))))))))
+      (adolist (.!)
+          (? *disabled?*
+             (? (& (cons? !)
+                   (eq !. 'directive)
+                   (eq .!. 'end))
+                (assemble-end))
+             (assemble-and-dump out ! line))))))
 
 (defun assemble-pass (out x)
   (= *pc* 0)
