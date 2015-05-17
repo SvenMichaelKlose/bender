@@ -103,3 +103,39 @@ a string or an expression of the following form:
 
 IDENTIFIER gets the value of a label.  An operand can be a number,
 IDENTIFIER or EXPRESSION.
+
+
+## Directives
+
+The assembler could be controlled with Lisp expressions but bender
+also comes with a couple of directives for additional comfort.
+
+### org <addr>
+
+Set the program counter to the specified address. Would do the
+same like:
+```
+@(& (= *pc* <addr>) nil)
+```
+
+### fill <num_bytes>
+
+Fills in num_bytes zeroes.  With Lisp expressions it would be:
+```
+@(maptimes [0] <num_bytes>)
+```
+
+### if <Lisp boolean>
+
+Assembles the following lines if the argument is not NIL.
+0 is not NIL.  if it is NIL all following lines up to an "end"
+directive are ignored.
+
+### data
+
+Causes the assemble to mute output until an "end" directive is
+found.  Great for layouting zero pages for example.
+
+### end
+
+Ends an "if" or "data" directive.

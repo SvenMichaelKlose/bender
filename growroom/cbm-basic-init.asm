@@ -2,20 +2,24 @@
 
 ;; ZERO PAGE
 
-s = 0
-d = 2
-p = 4
-ptr = 6
-end_sp = 8
-accu = 9
-strings_end = 11
-strings_left = 13
+code = @*pc*
+
+    data
+accu:           0 0 ; 16-bit accu
+s:              0 0 ; source pointer
+d:              0 0 ; destination pointer
+p:              0 0 ; temporary pointer
+strings_end:    0 0 ; pointer to free string space
+strings_left:   0 0 ; number of string bytes left
+end_sp:         0   ; BASIC stack pointer
 
 ;;
 memory_end = $1e00
 string_vars = $1c00
 strings = $1d00
+    end
 
+    org code
 
 ;; ZERO PAGE POINTER MANIPULATION
 
@@ -190,10 +194,10 @@ l:  lda (s),y
 ; PRINT null–terminated ASCII string.
 print_asciiz:
 l:  ldy #0
-    lda (ptr),y
+    lda (p),y
     beq +r
     jsr $ffd2
-    ldx #ptr
+    ldx #p
     jsr inc_zp
     jmp -l
 r:  rts

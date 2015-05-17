@@ -4,6 +4,7 @@
 (defvar *pc* nil)
 (defvar *pass* nil)
 (defvar *disabled?* nil)
+(defvar *data?* nil)
 (defvar *block-stack* nil)
 
 (defun first-pass? ()
@@ -21,7 +22,8 @@
      0))
 
 (defun assemble-byte (out x)
-  (princ (code-char x) out)
+  (| *data?*
+     (princ (code-char x) out))
   (++! *pc*))
 
 (defun assemble-operand (out inst operand)
@@ -78,11 +80,18 @@
 
 (defun assemble-if (out x)
   (push *disabled?* *block-stack*)
+  (push *data?* *block-stack*)
   (= *disabled?* (not (assemble-expression ..x.))))
+
+(defun assemble-data (out x)
+  (push *disabled?* *block-stack*)
+  (push *data?* *block-stack*)
+  (= *data?* t))
 
 (defun assemble-end ()
   (| *block-stack*
      (error "Unexpected directive 'end'."))
+  (= *data?* (pop *block-stack*))
   (= *disabled?* (pop *block-stack*)))
 
 (defun assemble-directive (out x)
@@ -90,6 +99,7 @@
     'org   (= *pc* (assemble-expression ..x.))
     'fill  (assemble-fill out x)
     'if    (assemble-if out x)
+    'data  (assemble-data out x)
     'end   (assemble-end)
     (error "Unsupported directive ~A." x)))
 
