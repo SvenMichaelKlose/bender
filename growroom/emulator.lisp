@@ -22,6 +22,14 @@
     (= a !))
   (e-arith-flags))
 
+(defun e-sbc ()
+  (let neg (++ (bit-xor r #xff))
+    (alet (+ a neg c)
+      (= v (bit-and (~ (bit-and (bit-xor a neg)) (bit-xor a !)) #x80))
+      (= c (< #xff !))
+      (= a !)))
+  (e-arith-flags))
+
 (defun e-and ()
   (= a (bit-and a r))
   (e-arith-flags))
