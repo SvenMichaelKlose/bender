@@ -110,6 +110,9 @@
           (let-when parsed (parse (remove-if #'not (tokenize-line line)))
               (enqueue q (. ! parsed))))))))
 
+(defun parse-string (source)
+  (with-stream-string in source (parse-stream in)))
+
 (defun parse-files (filepaths)
   (apply #'+ (filter [(format t "Parsing '~A'…~%" _)
                       (with-input-file i _
