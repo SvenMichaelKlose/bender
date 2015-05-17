@@ -6,6 +6,7 @@
 (defvar *disabled?* nil)
 (defvar *data?* nil)
 (defvar *block-stack* nil)
+(defvar *cycles* nil)
 
 (defun first-pass? ()
   (< *pass* 1))
@@ -50,7 +51,8 @@
     (check-branch-range inst operand)
     (instruction-optimize-addrmode inst)
     (assemble-byte out (instruction-opcode inst))
-    (assemble-operand out inst operand)))
+    (assemble-operand out inst operand)
+    (= *cycles* (instruction-cycles inst))))
 
 (defun assemble-assignment (x)
   (add-label .x. (assemble-expression ..x.)))
@@ -118,6 +120,7 @@
       (error "Unexpected parser expression ~A." x))))
 
 (defun assemble-and-dump (out x line)
+  (= *cycles* nil)
   (with-string-stream o
     (let pc *pc*
       (assemble o x)
@@ -126,6 +129,7 @@
           (fresh-line)
           (print-hexword pc)
           (princ ":")
+          (format t " ~A :" (| *cycles* " "))
           (adolist ((string-list bytes))
             (princ " ")
             (print-hexbyte (char-code !))))
