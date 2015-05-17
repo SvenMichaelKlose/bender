@@ -9,3 +9,7 @@
 
 (format t "; Diassembling 'out.prg' to match against 'tests/all_instructions_disassembled.asm'…")
 (disassemble-file "tests/all_instructions.bin" "all_instructions_diassembled.asm")
+(= *model* :vic-20)
+(assemble-files "cbm-basic-init.prg"
+                "vic-20/basic-loader.asm"
+                "growroom/cbm-basic-init.asm")
