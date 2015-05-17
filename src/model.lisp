@@ -6,6 +6,7 @@
 (defun basic-start-address (model)
   (case model
     nil         *basic-start*
+    :c64        #x0801
     :vic-20     #x1001
     :vic-20+3k  #x0401
     :vic-20+xk  #x1201
