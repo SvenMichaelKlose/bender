@@ -7,6 +7,7 @@
 (defvar *data?* nil)
 (defvar *block-stack* nil)
 (defvar *cycles* nil)
+(defvar *acycles* 0)
 
 (defun first-pass? ()
   (< *pass* 1))
@@ -129,11 +130,12 @@
           (fresh-line)
           (print-hexword pc)
           (princ ":")
-          (format t " ~A :" (| *cycles* " "))
+          (format t " ~A ~A :" *acycles* (| *cycles* " "))
+          (& *cycles* (+! *acycles* *cycles*))
           (adolist ((string-list bytes))
             (princ " ")
             (print-hexbyte (char-code !))))
-        (while (< (stream-location-column (stream-output-location *standard-output*)) 22)
+        (while (< (stream-location-column (stream-output-location *standard-output*)) 26)
                nil
           (princ " "))
         (princ line)
@@ -152,6 +154,7 @@
 
 (defun assemble-pass (out x)
   (= *pc* 0)
+  (= *acycles* 0)
   (rewind-labels)
   (assemble-list out x))
 
