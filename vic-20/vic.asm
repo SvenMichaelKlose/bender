@@ -1,10 +1,21 @@
 ; Bender – Copyright (c) 2015 Sven Michael Klose <pixel@hugbox.org>
 
-screensize = @(* 22 23)
-
-screen      = $1e00
-colors      = $9600
-colors_low  = $9400
+vicreg_interlace_horigin        = $9000
+vicreg_vorigin                  = $9001
+vicreg_screenlo_columns         = $9002
+vicreg_rasterlo_rows_charsize   = $9003
+vicreg_rasterhi                 = $9004
+vicreg_screenhi_charset         = $9005
+vicreg_hpen                     = $9006
+vicreg_vpen                     = $9007
+vicreg_paddle1                  = $9008
+vicreg_paddle2                  = $9009
+vicreg_bass                     = $900a
+vicreg_alto                     = $900b
+vicreg_soprano                  = $900c
+vicreg_noise                    = $900d
+vicreg_auxcol_volume            = $900e
+vicreg_screencol_reverse_border = $900f
 
 vic_screen_1000      = %11000000
 vic_screen_1200      = %11000000
@@ -34,23 +45,7 @@ vic_charset_1800     = %1110
 vic_charset_1c00_up  = %1111
 vic_charset_1c00     = %1111
 
-vicreg_interlace_horigin        = $9000
-vicreg_vorigin                  = $9001
-vicreg_screenlo_columns         = $9002
-vicreg_rasterlo_rows_charsize   = $9003
-vicreg_rasterhi                 = $9004
-vicreg_screenhi_charset         = $9005
-vicreg_hpen                     = $9006
-vicreg_vpen                     = $9007
-vicreg_paddle1                  = $9008
-vicreg_paddle2                  = $9009
-vicreg_bass                     = $900a
-vicreg_alto                     = $900b
-vicreg_soprano                  = $900c
-vicreg_noise                    = $900d
-vicreg_auxcol_volume            = $900e
-vicreg_screencol_reverse_border = $900f
-
+reverse = 8
 multicolor = 8
 
 ; Character/border colors.
