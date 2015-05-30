@@ -34,6 +34,10 @@
   (= a (bit-and a r))
   (e-arith-flags))
 
+(defun e-ora ()
+  (= a (bit-or a r))
+  (e-arith-flags))
+
 (defun e-asl ()
   (= c (bit-and r #x80))
   (= a (<< a 1))
