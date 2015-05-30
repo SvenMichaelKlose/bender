@@ -1,15 +1,18 @@
-;;;;; bender – Copyright (c) 2014 Sven Michael Klose <pixel@copei.de>
+; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
 (defvar *instructions* (make-hash-table :test #'eq))
+(defvar *opcode-map* (make-array 256))
 
 (defun make-instruction-by-opcode (x)
   (aprog1 (opcode-instruction x)
-    (let m (instruction-mnemonic !)
+    (with (m (instruction-mnemonic !)
+           a (instruction-addrmode !))
       (unless (eq 'ill m)
         (cache (make-hash-table :test #'eq) (href *instructions* m))
-        (& (href (href *instructions* m) (instruction-addrmode !))
+        (& (href (href *instructions* m) a)
            (error "Double opcode for ~A." !))
-        (= (href (href *instructions* m) (instruction-addrmode !)) x)))))
+        (= (href (href *instructions* m) a) x)
+        (= (aref *opcode-map* x) (. m a))))))
 
 (defun make-instruction-map ()
   (adotimes 256
@@ -25,9 +28,11 @@
         (length (hashkeys *instructions*))
         (number-of-legal-opcodes))
 
-(defun print-instruction-addressing-modes (&optional (out *standard-output*))
+(defun print-instructions (&optional (out *standard-output*))
   (dolist (i (hashkeys *instructions*))
     (format out "~A: ~A~%" i (hashkeys (href *instructions* i)))))
+
+(print-instructions)
 
 (defun generate-opcode (mnemonic addrmode)
   (alet (href *instructions* mnemonic)
