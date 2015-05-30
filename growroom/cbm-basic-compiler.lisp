@@ -2,10 +2,10 @@
 
 ; Let's start with byte integers and strings and go on from there.
 
-(defun number-to-accu (x)
+(defun number-to-accu (out x)
   (?
-    (number? x.)    (line out "lda #~A" x.)
-    (variable? x.)  (line out "lda ~A" x.)
+    (number? x)    (line out "lda #~A" x)
+    (variable? x)  (line out "lda ~A" x)
     (error "Number expected.")))
 
 (defun accu-to-var (x)
@@ -26,7 +26,7 @@
   (line out "sta (ptr),y"))
 
 (defun poke (out x)
-  (line out "lda #~A" .x.)
+  (number-to-accu x.)
   (line out "sta ~A" .x.))
 
 (defun peek (out x)
