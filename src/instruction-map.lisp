@@ -7,6 +7,7 @@
   (aprog1 (opcode-instruction x)
     (with (m (instruction-mnemonic !)
            a (instruction-addrmode !))
+      (= (aref *opcode-map* x) nil)
       (unless (eq 'ill m)
         (cache (make-hash-table :test #'eq) (href *instructions* m))
         (& (href (href *instructions* m) a)
