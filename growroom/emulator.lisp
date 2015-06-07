@@ -8,8 +8,17 @@
 (defvar c nil)  ; C flag
 (defvar v nil)  ; V flag
 (defvar d nil)  ; D flag
+(defvar i nil)  ; interrupt
 (defvar r nil)  ; operand
 (defvar m nil)  ; memory
+
+(defun e-sec () (= c 1))
+(defun e-sed () (= d 1))
+(defun e-sei () (= i 1))
+(defun e-clc () (= c 0))
+(defun e-cld () (= d 0))
+(defun e-cli () (= i 0))
+(defun e-clv () (= v 0))
 
 (defun e-arith-flags ()
   (= n (bit-and a #x80))
@@ -154,3 +163,50 @@
 (defun e-rti ()
   (e-plp)
   (e-pop-pc))
+
+(defun fetch-byte ()
+  (prog1 (aref m *pc*)
+    (++! *pc*)))
+
+(defun fetch-word ()
+  (+ (fetch-byte)
+     (* #x100 (fetch-byte))))
+
+(defun e-jmp ()
+  (= *pc* (fetch-word)))
+
+(defun e-jmp-relative ()
+  (alet (fetch-word)
+    (= *pc* (+ (aref m !) (* #x100 (aref m (++ !)))))))
+
+(defun e-bra ()
+  (alet (fetch-byte)
+    (+! *pc* (? (<= 128 !)
+                (- ! 256)
+                !))))
+
+(defun e-cond (x)
+  (? (zero? x)
+     (e-bra)
+     (++! *pc*)))
+
+(defun e-beq () (e-cond z))
+(defun e-bne () (e-cond (not z)))
+(defun e-bcc () (e-cond c))
+(defun e-bcs () (e-cond (not c)))
+(defun e-bpl () (e-cond n))
+(defun e-bmi () (e-cond (not n)))
+(defun e-bvc () (e-cond v))
+(defun e-bvs () (e-cond (not v)))
+
+(defun emulate-instruction ()
+  (let opcode (fetch-byte)
+    (emulator-fetch-operand opcode)
+    (funcall *emulator-instructions*)
+    (emulator-put-operand)))
+
+(defun emulate ()
+  (while (not *emulator-interrupt?*)
+    (!? (aref *emulator-breakpoints* *pc*)
+        (funcall !)
+        (emulate-instruction))))
