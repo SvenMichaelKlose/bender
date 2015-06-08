@@ -18,10 +18,6 @@
       (brk jsr rti rts)))   ; (zero? (bit-and opcode #x9f))
 
 (defconstant *mnemonic-list* (remove-if #'not (apply #'+ *mnemonics*)))
-(defconstant *modifying-mnemonics* '(sta stx sty asl lsr rol ror inc dec))
-
-(defun modifying-mnemonic? (x)
-  (member x *modifying-mnemonics* :test #'eq))
 
 ; Addressing modes by CC.
 (defconstant *addrmodes*
@@ -93,5 +89,9 @@
                (jsr . 6)))
 
 (defconstant +rw-instructions+ '(asl dec inc lsr rol ror))
-
 (defconstant +stack-instructions+ '(pha php pla plp))
+
+(defconstant +modifying-instructions+ (+ +rw-instructions+ 
+                                         '(sta stx sty asl lsr rol ror inc dec)))
+(defun modifying-instruction? (x)
+  (member x +modifying-instructions+ :test #'eq))
