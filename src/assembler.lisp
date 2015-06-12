@@ -84,7 +84,7 @@
 (defun assemble-if (out x)
   (push *disabled?* *block-stack*)
   (push *data?* *block-stack*)
-  (= *disabled?* (not (assemble-expression ..x.))))
+  (= *disabled?* (zero? (assemble-expression ..x.))))
 
 (defun assemble-data (out x)
   (push *disabled?* *block-stack*)
@@ -146,9 +146,7 @@
     (let line !.
       (adolist (.!)
           (? *disabled?*
-             (? (& (cons? !)
-                   (eq !. 'directive)
-                   (eq .!. 'end))
+             (? (equal ! '(directive end))
                 (assemble-end))
              (assemble-and-dump out ! line))))))
 
