@@ -1,4 +1,4 @@
-;;;;; bender – Copyright (c) 2014 Sven Michael Klose <pixel@copei.de>
+; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
 (defun hex (x w)
   (let r nil
@@ -30,6 +30,6 @@
        (princ ")" o))))
 
 (def-instruction print-instruction (instruction &optional (out *standard-output*))
-  (format out "    ~A " mnemonic)
+  (format out "    ~A " (downcase (symbol-name mnemonic)))
   (print-operand instruction out)
   (terpri out))
