@@ -24,7 +24,6 @@
 (load "src/ascii2petscii.lisp")
 (load "src/cbm-basic.lisp")
 (load "src/model.lisp")
-(load "growroom/emulator.lisp")
 (load "src/tests.lisp")
 
 (dump-system "bender")
