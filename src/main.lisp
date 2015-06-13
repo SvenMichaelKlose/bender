@@ -1,6 +1,7 @@
 ; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
 (load "./environment/platforms/shared/read-binary.lisp")
+(load "./environment/platforms/shared/xml-entities.lisp")
 (load "./environment/platforms/shared/xml2lml.lisp")
 
 (load "src/6502.lisp")
