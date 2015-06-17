@@ -126,6 +126,7 @@
     (let pc *pc*
       (assemble o x)
       (let bytes (get-stream-string o)
+      (when t
         (when bytes
           (fresh-line)
           (print-hexword pc)
@@ -139,6 +140,7 @@
                nil
           (princ " "))
         (princ line)
+  )
         (princ bytes out)))))
 
 (defun assemble-list (out x)
