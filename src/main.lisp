@@ -9,7 +9,7 @@
 (load "src/print.lisp")
 (load "src/disassembler.lisp")
 (load "src/instruction-map.lisp")
-(load "growroom/gen-c-disassembler.lisp")
+(load "src/gen-c-instruction-map.lisp")
 (load "src/cycles.lisp")
 (load "src/labels.lisp")
 (load "src/tokenizer.lisp")
