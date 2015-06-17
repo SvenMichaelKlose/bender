@@ -36,7 +36,7 @@
     (= operand (>> operand 8))))
 
 (defun check-branch-range (inst operand)
-  (& (< 2 *pass*)
+  (& (< 3 *pass*)
      (eq 'branch (instruction-addrmode inst))
      (alet (- operand *pc*)
        (& (| (< ! -128)
@@ -168,7 +168,7 @@
     (= *pass* 0)
     (alet *pc*
       (while (| *label-changed?*
-                (< *pass* 2))
+                (< *pass* 3))
              nil
         (= *label-changed?* nil)
         (assemble-pass-to-file out-name parsed)
