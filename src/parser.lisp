@@ -105,7 +105,7 @@
   (with-queue q
     (while (peek-char i)
            (queue-list q)
-      (alet (read-line i)
+      (alet (print (read-line i))
         (with-stream-string line !
           (let-when parsed (parse (remove-if #'not (tokenize-line line)))
               (enqueue q (. ! parsed))))))))
