@@ -15,10 +15,11 @@
 (defun assemble-mnemonic-addrmode (mnemonic addrmode)
   (opcode-instruction (generate-opcode mnemonic addrmode)))
 
-(defun assemble-expression (x)
+(defun assemble-expression (x &key (ensure? nil))
   (| (& (number? x) x)
      (case x.
-       'expression  (unless (first-pass?)
+       'expression  (unless (& (not ensure?)
+                               (first-pass?))
                       (eval (macroexpand (labels-to-exprs .x))))
        'identifier  (get-label .x :required? (not (first-pass?))))
      0))
@@ -84,7 +85,7 @@
 (defun assemble-if (out x)
   (push *disabled?* *block-stack*)
   (push *data?* *block-stack*)
-  (= *disabled?* (zero? (assemble-expression ..x.))))
+  (= *disabled?* (zero? (assemble-expression ..x. :ensure? t))))
 
 (defun assemble-data (out x)
   (push *disabled?* *block-stack*)
