@@ -21,7 +21,7 @@
 #define BYTE_AMS (AM_IMM | AM_ZP | AM_ZPX | AM_IZPX | AM_IZPY)
 #define WORD_AMS (AM_ABS | AM_ABSX | AM_ABSY | AM_INDI)
 
-#include "instruction-map.c"
+#include "opcode-map.c"
 
 struct operand_string {
     const char * str;
@@ -38,15 +38,6 @@ struct operand_string {
     { NULL, 0 }
 };
 
-void
-print_hex (FILE * f, int x, int n)
-{
-    if (--n > 0)
-        print_hex (f, x >> 4, n);
-    x &= 15;
-    fputc (x < 10 ? x + '0' : x - 10 + 'a', f);
-}
-
 const char *
 print_operand_string (FILE * f, struct operand_string * s, int addrmode)
 {
@@ -62,18 +53,17 @@ disassemble (FILE * f, address pc)
     struct instruction * i = &opcode_map[m[pc]];
     struct operand_string * s = operand_strings;
 
-    print_hex (f, pc, 4);
-    fprintf (f, ": %s ", i->mnemonic);
+    fprintf (f, "$%04hx: %s ", pc, i->mnemonic);
 
     print_operand_string (f, s++, i->addrmode);
     print_operand_string (f, s++, i->addrmode);
 
     if (i->addrmode & BYTE_AMS)
-        print_hex (f, m[pc + 1], 2);
+        fprintf (f, "$%02hx", m[pc + 1]);
     else if (i->addrmode & WORD_AMS)
-        print_hex (f, m[pc + 1] + (m[pc + 2] << 8), 4);
+        fprintf (f, "$%04hx", m[pc + 1] + (m[pc + 2] << 8));
     else if (i->addrmode & AM_BRANCH)
-        print_hex (f, pc + 2 + (char) m[pc + 1], 4);
+        fprintf (f, "$%04hx", pc + 2 + (char) m[pc + 1]);
 
     while (print_operand_string (f, s++, i->addrmode));
 
