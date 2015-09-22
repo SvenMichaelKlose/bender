@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "types.h"
 #include "6502.h"
+#include "disassembler.h"
 
 /*
  * Registers
@@ -388,6 +390,8 @@ e_ill ()
 {
     printf ("Illegal opcode %d at %d.\n", opcode, pc - 1);
 }
+
+#include "6502-instructions.c"
 
 void
 mos6502_reset ()
