@@ -1,5 +1,8 @@
 ; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
+; Opcodes have the format AAABBBCC.  For reasons I don't know they're
+; usually referred to as AA, BB and CC.
+
 (defconstant *mnemonics*
     '((nil bit jmp jmp      ; CC == 0
        sty ldy cpy cpx)
