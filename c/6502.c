@@ -49,7 +49,10 @@ e_fetch_word ()
 }
 
 address
-e_get_word (address x) { return m[x] + (m[x + 1] << 8); }
+e_get_word (address x)
+{
+    return m[x] + (m[x + 1] << 8);
+}
 
 
 /*
@@ -78,7 +81,7 @@ void e_absx () { r = e_get_operand (e_fetch_word () + x); }
 void e_absy () { r = e_get_operand (e_fetch_word () + y); }
 void e_izpx () { r = e_get_operand (e_get_word (e_fetch_byte () + x)); }
 void e_izpy () { r = e_get_operand (e_get_word (e_fetch_byte ()) + y); }
-void e_indi () { r = e_get_word (e_fetch_word ()); }
+void e_indi () { operand = e_get_word (e_fetch_word ()); }
 
 void
 e_branch ()
@@ -389,6 +392,7 @@ void
 e_ill ()
 {
     printf ("Illegal opcode %d at %d.\n", opcode, pc - 1);
+    exit (255);
 }
 
 #include "6502-instructions.c"
