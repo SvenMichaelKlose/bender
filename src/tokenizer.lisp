@@ -72,6 +72,11 @@
   (read-char in)
   (. 'string (read-string in)))
 
+(defun tokenize-comment (in)
+  (awhile (not (== 10 (peek-char in)))
+          nil
+    (read-char in)))
+
 (defun tokenize (in)
   (skip-whitespaces in)
   (awhen (peek-char in)
@@ -81,7 +86,7 @@
       (== ! #\@)       (tokenize-expression in)
       (== ! #\$)       (tokenize-hexadecimal in)
       (== ! #\%)       (tokenize-binary in)
-      (== ! #\;)       (& (read-line in) nil)
+      (== ! #\;)       (tokenize-comment in)
       (digit-char? !)  (tokenize-decimal in)
       (| (tokenize-identifier in)
          (? (control-char? !)
@@ -89,6 +94,14 @@
             (error "Unexpected character ~A." (read-char in)))))))
 
 (defun tokenize-line (in)
-  (when (peek-char in)
-    (. (tokenize in)
-       (tokenize-line in))))
+  (awhen (peek-char in)
+         (print !)
+    (?
+      (== ! 10)     (progn
+                      (read-char in)
+                      nil)
+      (== ! 13)     (progn
+                      (read-char in)
+                      (tokenize-line in))
+      (. (tokenize in)
+         (tokenize-line in)))))

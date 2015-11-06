@@ -15,3 +15,6 @@
 (assemble-files "obj/cbm-basic-init.prg"
                 "vic-20/basic-loader.asm"
                 "growroom/cbm-basic-init.asm")
+
+(assemble-files "obj/inline-lisp.bin"
+                "tests/inline-lisp.asm")

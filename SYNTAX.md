@@ -18,7 +18,7 @@ operand.  Comments start with a semicolon.
 ## Literals
 
 
-Bytes, words and strings don't need red tape . Words must have
+Bytes, words and strings do not need red tape . Words must have
 enough leading zeroes:
 
 ```
@@ -42,7 +42,7 @@ Label definitions must end with a colon.
 
 ## Local labels
 
-Labels may be defined more than once.  But that'll give you
+Labels may be defined more than once.  But that will give you
 errors…
 
 ```
@@ -50,10 +50,10 @@ l1: lda f0
     bne n1
     jsr s0
 n1: lda f1
-    bne n1      ; ERROR: Bender can't tell which "n1" you desire.
+    bne n1      ; ERROR: Bender cannot tell which "n1" you desire.
     jsr s1
 n1: jsr s2
-    jmp l1      ; ERROR: Bender can't tell which "l1" you desire.
+    jmp l1      ; ERROR: Bender cannot tell which "l1" you desire.
 l1:
 ```
 
@@ -74,8 +74,8 @@ l1:
 
 ## Applying Lisp expressions
 
-Lisp expressions can be inserted with the @ character.  Line breaks
-are not allowed inside them.
+Lisp expressions can be inserted with the @ character.
+They may span multiple lines.
 
 ```
     ldx #@(- table_end table_start) ; Load X with size of table.
