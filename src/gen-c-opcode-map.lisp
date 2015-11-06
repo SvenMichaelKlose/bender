@@ -3,9 +3,14 @@
 (defun gen-c-opcode (x)
   (+ "    { "
      (? x.
-        (format nil "\"~A\", AM_~A"
-                    (downcase (symbol-name x.))
-                    (symbol-name .x))
+        (? (& (| (eq x. 'ldx)
+                 (eq x. 'stx))
+              (eq .x 'zpx))
+           (format nil "\"~A\", AM_ZPY"
+                       (downcase (symbol-name x.)))
+           (format nil "\"~A\", AM_~A"
+                       (downcase (symbol-name x.))
+                       (symbol-name .x)))
         (format nil "NULL, 0"))
      " }"))
 

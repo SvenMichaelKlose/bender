@@ -1,6 +1,10 @@
 ; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
 (defun exec-name (m a)
+  (? (& (| (eq m 'ldx)
+           (eq m 'stx))
+        (eq a 'zpx))
+     (= a 'zpy))
   (+ "e_"
      (downcase (symbol-name m))
      (? (in? m 'accu 'branch)
@@ -8,6 +12,10 @@
         (+ "_" (downcase (symbol-name a))))))
 
 (defun exec-code (m a)
+  (? (& (| (eq m 'ldx)
+           (eq m 'stx))
+        (eq a 'zpx))
+     (= a 'zpy))
   (format nil (+ "void~%"
                  "~A ()~%"
                  "{~%"
