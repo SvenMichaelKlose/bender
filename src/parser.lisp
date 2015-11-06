@@ -105,9 +105,10 @@
   (with-queue q
     (while (peek-char i)
            (queue-list q)
-      (let-when parsed (parse (remove-if #'not (tokenize-line i)))
-        (enqueue q (. nil   ; TODO: Should be read string.
-                      parsed))))))
+      (let ci (make-copying-stream :in i)
+        (let-when parsed (parse (remove-if #'not (tokenize-line ci)))
+          (enqueue q (. (copying-stream-recorded-in ci)
+                        parsed)))))))
 
 (defun parse-string (source)
   (with-stream-string in source (parse-stream in)))
