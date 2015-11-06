@@ -95,7 +95,6 @@
 
 (defun tokenize-line (in)
   (awhen (peek-char in)
-         (print !)
     (?
       (== ! 10)     (progn
                       (read-char in)
