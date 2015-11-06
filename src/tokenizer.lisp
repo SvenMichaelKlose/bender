@@ -20,10 +20,11 @@
 
 (defun skip-whitespaces (in)
   (awhen (peek-char in)
-    (when (| (control-char? !)
-             (== #\  !))
-      (read-char in)
-      (skip-whitespaces in))))
+    (unless (== 10 !)
+      (when (| (control-char? !)
+               (== #\  !))
+        (read-char in)
+        (skip-whitespaces in)))))
 
 (defun read-identifier (in)
   (awhen (peek-char in)
@@ -94,6 +95,7 @@
             (error "Unexpected character ~A." (read-char in)))))))
 
 (defun tokenize-line (in)
+  (skip-whitespaces in)
   (awhen (peek-char in)
     (?
       (== ! 10)     (progn
