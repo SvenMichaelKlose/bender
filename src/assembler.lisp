@@ -73,7 +73,7 @@
 (defun assemble-toplevel-expression (out x)
   (alet (assemble-expression x)
     (?
-      (cons? !)    (assemble-list out (list (. nil !)))
+      (cons? !)    (assemble-parsed-expressions out (list (. nil !)))
       (string? !)  (assemble-string out !)
       (assemble-byte out !))))
 
@@ -127,7 +127,6 @@
     (let pc *pc*
       (assemble o x)
       (let bytes (get-stream-string o)
-      (when t
         (when bytes
           (fresh-line)
           (print-hexword pc)
@@ -141,10 +140,9 @@
                nil
           (princ " "))
         (princ line)
-  )
         (princ bytes out)))))
 
-(defun assemble-list (out x)
+(defun assemble-parsed-expressions (out x)
   (adolist x
     (let line !.
       (adolist (.!)
@@ -157,13 +155,14 @@
   (= *pc* 0)
   (= *acycles* 0)
   (rewind-labels)
-  (assemble-list out x))
+  (assemble-parsed-expressions out x))
 
 (defun assemble-pass-to-file (name i)
   (with-output-file out name
     (assemble-pass out i)))
 
 (defun assemble-files (out-name &rest in-names)
+  (format t "Assembling to '~A'…~%" out-name)
   (let parsed (parse-files in-names)
     (clear-labels)
     (= *pass* 0)
