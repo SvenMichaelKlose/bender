@@ -2,6 +2,7 @@
 
 (defvar *previous-labels* nil)
 (defvar *next-labels*     nil)
+(defvar *imported-labels* nil)
 (defvar *label-changed?* nil)
 
 (defun clear-labels ()
@@ -44,6 +45,7 @@
     (& required? prev next
        (error "Label ~A appears in previous and later code. Please specify a direction." x))
     (| prev next
+       (cdr (assoc x *imported-labels*))
        (& required?
           (error "Label ~A is not defined." x)))))
 
@@ -58,3 +60,6 @@
           #\<  (low (| (get-label ! :required? required?) 0))
           #\>  (high (| (get-label ! :required? required?) 0))
           (get-label-undirected x :required? required?))))))
+
+(defun get-labels ()
+  *next-labels*)
