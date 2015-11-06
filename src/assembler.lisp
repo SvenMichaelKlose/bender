@@ -173,4 +173,6 @@
              nil
         (= *label-changed?* nil)
         (assemble-pass-to-file out-name parsed)
-        (++! *pass*)))))
+        (++! *pass*))))
+  (rewind-labels)
+  nil)
