@@ -6,4 +6,6 @@
      x))
 
 (defun ascii2petscii (&rest x)
-  (list-string (@ #'ascii2petscii-code (string-list (apply #'+ x)))))
+  (? (cons? x.)
+     (ascii2petscii (list-string x.)) ; XXX deprecated
+     (list-string (@ #'ascii2petscii-code (string-list (apply #'+ x))))))
