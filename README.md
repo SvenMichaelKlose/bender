@@ -146,7 +146,7 @@ Toplevel expressions are expected to return
 
 ### ASM expressions
 
-The ASM macro generates parsed expressions for you.  They
+Function ASM generates parsed expressions for you.  They
 are explained in the next session.  It expects one or more
 assembly source strings.
 
