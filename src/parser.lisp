@@ -1,5 +1,13 @@
 ; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
+(defvar *parser-stream* nil)
+
+(defun parser-error (x &rest fmt)
+  (error "In ~A, line ~A: ~A"
+         (stream-location-id (stream-input-location *parser-stream*))
+         (stream-location-line (stream-input-location *parser-stream*))
+         (apply #'format nil x fmt)))
+
 (def-head-predicate identifier)
 (def-head-predicate colon)
 (def-head-predicate hash)
@@ -28,7 +36,7 @@
     (eq 'hash x..)
       (progn
         (| (number-or-identifier? .x.)
-           (error "Expression expected instead of ~A." (car .x.)))
+           (parser-error "Expression expected instead of ~A." (car .x.)))
         (list 'imm .x.))
     (number-or-identifier? x.)
       (? (not .x)
@@ -38,22 +46,22 @@
                (list (case (cdr ..x.)
                        'x  'absx
                        'y  'absy
-                       (error "Index register expected instead of '~A'." (cdr ..x.)))
+                       (parser-error "Index register expected instead of '~A'." (cdr ..x.)))
                      x.)
-               (error "Index register expected."))
-            (error "Comma expected instead of ~A." (car .x.))))
+               (parser-error "Index register expected."))
+            (parser-error "Comma expected instead of ~A." (car .x.))))
     (bracket-open? x.)
       (progn
         (| (number-or-identifier? .x.)
-           (error "Expression expected instead of ~A." (car .x.)))
+           (parser-error "Expression expected instead of ~A." (car .x.)))
         (? (bracket-close? ..x.)
            (?
              (comma? ...x.)
                (?
                  (eq 'y (cdr ....x.))  (list 'izpy .x.)
-                 (error "Index register Y expected."))
+                 (parser-error "Index register Y expected."))
              ...x.
-               (error "Comma or end of line expected instead of ~A." (car ...x.))
+               (parser-error "Comma or end of line expected instead of ~A." (car ...x.))
              (list 'indi .x.))
            (comma? ..x.)
              (? (identifier? ...x.)
@@ -61,18 +69,18 @@
                   (eq 'x (cdr ...x.))
                     (? (bracket-close? ....x.)
                        (list 'izpx .x.)
-                       (error "Closing bracket expected instead of ~A." ....x.))
-                  (error "Index register X expected."))
-                (error "Index register X expected."))
-           (error "~A closing bracket."
+                       (parser-error "Closing bracket expected instead of ~A." ....x.))
+                  (parser-error "Index register X expected."))
+                (parser-error "Index register X expected."))
+           (parser-error "~A closing bracket."
                   (? (member-if #'bracket-close? ...x)
                      "Misplaced"
                      "Missing"))))
-    (error "Syntax error at ~A." x.)))
+    (parser-error "Syntax error at ~A." x.)))
 
 (defun parse-assignment (x)
   (| (assignment? .x.)
-     (error "Assignment '=' expected instead of ~A." .x))
+     (parser-error "Assignment '=' expected instead of ~A." .x))
   `((assignment ,(cdr x.) ,..x.)))
 
 (defun parse-directive (x)
@@ -91,7 +99,7 @@
            (? (assignment? .x.)
               (parse-assignment x)
               (. x. (parse-0 .x)))
-           (error "Unexpected token ~A." x.))))))
+           (parser-error "Unexpected token ~A." x.))))))
 
 (defun parse (x)
   (awhen (parse-labels x)
@@ -102,13 +110,14 @@
       (f (parse-0 !)))))
 
 (defun parse-stream (i)
-  (with-queue q
-    (while (peek-char i)
-           (queue-list q)
-      (let ci (make-copying-stream :in i)
-        (let-when parsed (parse (remove-if #'not (tokenize-line ci)))
-          (enqueue q (. (copying-stream-recorded-in ci)
-                        parsed)))))))
+  (with-temporary *parser-stream* i
+    (with-queue q
+      (while (peek-char i)
+             (queue-list q)
+        (let ci (make-copying-stream :in i)
+          (let-when parsed (parse (remove-if #'not (tokenize-line ci)))
+            (enqueue q (. (copying-stream-recorded-in ci)
+                          parsed))))))))
 
 (defun parse-string (source)
   (with-stream-string in source (parse-stream in)))
