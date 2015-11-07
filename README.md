@@ -3,7 +3,7 @@
 This is Bender, a development suite for the MOS Technology 6502 CPU,
 written in the Lisp dialect tré.  Bender can:
 
-* assemble programs
+* assemble programs with inlined Lisp code
 * disassemble binaries (very incomplete)
 * generate VICE monitor command files
 * generate TAP and WAV files
