@@ -177,22 +177,23 @@
   (rewind-labels)
   (assemble-parsed-expressions out x))
 
-(defun assemble-pass-to-file (name i)
-  (with-output-file out name
-    (assemble-pass out i)))
-
 (defun print-dump-header (o)
   (format o ";~%")
   (format o "; Pass ~A~%" *pass*)
   (format o ";~%")
   (format o "; Adress | Cycles | Accumulated cycles | Bytes | Source~%"))
 
+(defun assemble-pass-to-file (out-name dump-name i)
+  (with-output-file out out-name
+    (with-output-file dump dump-name
+      (with-temporary *assembler-dump-stream* dump
+        (print-dump-header dump)
+        (assemble-pass out i)))))
+
 (defun assemble-files (out-name &rest in-names)
   (let dump-name (+ out-name ".lst")
     (format t "Assembling to '~A'. Dump file is '~A'…~%"
             out-name dump-name)
-    (with-output-file dump (+ out-name ".lst")
-      (with-temporary *assembler-dump-stream* dump
         (let parsed (parse-files in-names)
           (clear-labels)
           (= *pass* 0)
@@ -201,9 +202,8 @@
                       (< *pass* 3))
                    nil
               (format t "Pass ~A…~%" *pass*)
-              (print-dump-header dump)
               (= *label-changed?* nil)
-              (assemble-pass-to-file out-name parsed)
-              (++! *pass*)))))))
+              (assemble-pass-to-file out-name dump-name parsed)
+              (++! *pass*)))))
   (rewind-labels)
   nil)
