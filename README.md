@@ -115,9 +115,8 @@ other assemblers use and may span multiple lines.
 Expressions can be used at toplevel as well.
 
 ```
-; Make a PETSCIIZ string at compile-time.
-text: @(@ #'ascii2petscii (string-list "Hello world!"))
-      0
+; Make a null–terminated PETSCIIZ string at compile-time.
+text: @(@ #'ascii2petscii "Hello world!") 0
 ```
 
 Toplevel expressions are expected to return
@@ -198,10 +197,10 @@ Fills in num_bytes zeroes.
     fill 256    ; Fill page with zeroes.
 ```
 
-With Lisp expressions it would be:
+With Lisp expressions this would be:
 
 ```
-@(maptimes [identity 0] <num_bytes>)
+@(maptimes [identity 0] 256)
 ```
 
 ### if <Lisp boolean>
