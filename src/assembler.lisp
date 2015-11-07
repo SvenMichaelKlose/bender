@@ -137,7 +137,7 @@
       'expression   (assemble-toplevel-expression out x)
       (assembler-error "Unexpected parsed expression ~A." x))))
 
-(defun assemble-dump-line (pc bytes line)
+(defun assemble-dump-line (pc bytes)
   (let o *assembler-dump-stream*
     (fresh-line o)
     (print-hexword pc o)
@@ -150,7 +150,7 @@
     (while (< (stream-location-column (stream-output-location o)) 26)
            nil
        (princ " " o))
-    (princ line o)))
+    (princ *assembler-current-line*.. o)))
 
 (defun assemble-and-dump (out x)
   (= *cycles* nil)
@@ -159,7 +159,7 @@
       (assemble o x)
       (let bytes (get-stream-string o)
         (when (length bytes)
-          (assemble-dump-line pc bytes *assembler-current-line*.)
+          (assemble-dump-line pc bytes)
           (princ bytes out))))))
 
 (defun assemble-parsed-expressions (out x)
@@ -195,6 +195,7 @@
                       (< *pass* 3))
                    nil
               (format t "Pass ~A…~%" *pass*)
+              (format dump ";~%; Pass ~A~%;~%" *pass*)
               (= *label-changed?* nil)
               (assemble-pass-to-file out-name parsed)
               (++! *pass*)))))))
