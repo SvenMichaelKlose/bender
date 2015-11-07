@@ -1,7 +1,7 @@
 # Overview
 
-This is Bender, a development suite for the MOS Technology 6502 CPU,
-written in the Lisp dialect tré.  Bender can:
+This is Bender, a development suite for the MOS Technology
+6502 CPU, written in the Lisp dialect tré.  Bender can:
 
 * assemble programs with inlined Lisp code
 * disassemble binaries (very incomplete)
@@ -26,14 +26,15 @@ Run 'make.sh' to generate a tré SBCL image called 'bender'.
 
 # Syntax
 
-The assembler is line-oriented.  A line may contain a label and an instruction
-or a directive. Also literal values are possible.
+The assembler is line-oriented.  A line may contain a label
+and an instruction or a directive.  Also literal values are
+possible.
 
 
 ## Instructions
 
-Instructions are notated as usual.  The A register must not be used as an
-operand.  Comments start with a semicolon.
+Instructions are notated as usual.  The A register must not
+be used as an operand.  Comments start with a semicolon.
 
 ```
     lda #0
@@ -44,8 +45,10 @@ operand.  Comments start with a semicolon.
 ## Literals
 
 
-Bytes, words and strings do not need red tape . Words must have
-enough leading zeroes:
+Bytes, words and strings do not need red tape.  Words must
+have enough leading zeroes:
+NOTE: The leading zero notation for word does NOT work at
+the moment.
 
 ```
     $1      ; A hexadecimal byte.
@@ -68,8 +71,9 @@ Label definitions must end with a colon.
 
 ## Local labels
 
-Labels may be defined more than once.  But that will give you
-errors…
+Labels may be defined more than once.  But that will give
+you errors unless you tell Bender the direction in which
+to look for:
 
 ```
 l1: lda f0
@@ -83,7 +87,8 @@ n1: jsr s2
 l1:
 ```
 
-…until you tell Bender the direction to look for:
+A leading '+' makes Bender search in following labels,
+a leading '-' make it search in previous code:
 
 ```
 l1: lda f0
@@ -97,12 +102,20 @@ n1: jsr s2
 l1:
 ```
 
+A label is always in previous code if it's used on the same
+line:
+
+```
+w:  jmp -w      ; Wait…
+```
+
 
 ## Applying Lisp expressions
 
-Lisp expressions can be inserted starting with the @ character.
-They replace the more familiar inline arithmetic expressions
-other assemblers use and may span multiple lines.
+Lisp expressions can be inserted starting with the '@'
+character.  They replace the more familiar inline
+arithmetic expressions other assemblers use and may span
+multiple lines.
 
 ```
     ; NOT used in Bender;
@@ -116,25 +129,22 @@ Expressions can be used at toplevel as well.
 
 ```
 ; Make a null–terminated PETSCIIZ string at compile-time.
-text: @(@ #'ascii2petscii "Hello world!") 0
+text: @(ascii2petscii "Hello world!") 0
 ```
 
 Toplevel expressions are expected to return
 
 * numbers or lists of numbers,
 * strings,
-* lists of parsed expressions or
+* lists of parsed expressions (also see ASM epressions) or
 * NIL.
 
 
 ### ASM expressions
 
-These expressions start with the symbol ASM followed by one
-or more strings with regular assembly source code or further
-ASM expressions in them.
-
-That way you can use Lisp macros more easily than with the
-parsed expressions explained in the next section.
+The ASM macro generates parsed expressions for you.  They
+are explained in the next session.  It expects one or more
+assembly source strings.
 
 ```
 @(progn
@@ -157,8 +167,8 @@ Lispy extensions, and thus, work in progress.
 
 ### Parsed expressions
 
-A parsed expression can be a number,
-a string or an expression of the following form:
+A parsed expression can be a number, a string or an
+expression of the following forms:
 
 ```
 (LABEL . name)
@@ -168,14 +178,15 @@ a string or an expression of the following form:
 (EXPRESSION . Lisp expression)
 ```
 
-IDENTIFIER gets the value of a label.  An operand can be a number,
-IDENTIFIER or EXPRESSION.
+IDENTIFIER gets the value of a label.  An operand can be
+a number, IDENTIFIER or EXPRESSION.
 
 
 ## Directives
 
-The assembler could be controlled with Lisp expressions but bender
-also comes with a couple of directives for additional comfort.
+The assembler could be controlled with Lisp expressions but
+Bender also comes with a couple of directives for additional
+comfort.
 
 ### org <addr>
 
@@ -205,9 +216,7 @@ With Lisp expressions this would be:
 
 ### if <Lisp boolean>
 
-Assembles the following lines if the argument is not NIL.
-0 is not NIL.  if it is NIL all following lines up to an "end"
-directive are ignored.
+Assembles the following lines unless its arguments is NIL.
 
 ```
 if @*with-feature-x?*
@@ -217,8 +226,8 @@ end
 
 ### data
 
-Causes the assembler to mute output until an "end" directive is
-found.  Great for layouting zero pages for example.
+Causes the assembler to mute output until an "end" directive
+is found.  Great for layouting zero pages for example:
 
 ```
     ; Some example zero page.
