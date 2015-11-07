@@ -31,7 +31,7 @@
 (defun get-label-in (ltab x direction required?)
   (| (cdr (assoc x ltab))
      (when required?
-       (error "No ~A label '~A'." direction x))))
+       (assembler-error "No ~A label '~A'." direction x))))
 
 (defun get-previous-label (x &key (required? t))
   (get-label-in *previous-labels* x "previous" required?))
@@ -43,11 +43,11 @@
   (with (prev  (get-previous-label x :required? nil)
          next  (get-next-label x :required? nil))
     (& required? prev next
-       (error "Label ~A appears in previous and later code. Please specify a direction." x))
+       (assembler-error "Label ~A appears in previous and later code. Please specify a direction." x))
     (| prev next
        (cdr (assoc x *imported-labels*))
        (& required?
-          (error "Label ~A is not defined." x)))))
+          (assembler-error "Label ~A is not defined." x)))))
 
 (defun get-label (x &key (required? t))
   (when x

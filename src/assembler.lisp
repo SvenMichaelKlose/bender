@@ -1,6 +1,7 @@
 ; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
-(defvar *current-line* nil)
+(defvar *assembler-current-line* nil)
+(defvar *assembler-dump-stream* nil)
 (defvar *pc* nil)
 (defvar *pass* nil)
 (defvar *disabled?* nil)
@@ -8,6 +9,13 @@
 (defvar *block-stack* nil)
 (defvar *cycles* nil)
 (defvar *acycles* 0)
+
+(defun assembler-error (x &rest fmt)
+  (alet *assembler-current-line*.
+    (error "Error while assembling '~A', line ~A:~%~A~A"
+           (cadr !) (cddr !)
+           !.
+           (apply #'format nil x fmt))))
 
 (defun first-pass? ()
   (< *pass* 1))
@@ -17,7 +25,7 @@
 
 (defmacro asm (&rest x)
   (| (every #'string? x)
-     (error "ASM expects one or more string."))
+     (assembler-error "ASM expects one or more string."))
   `'(,@(mapcan [parse-string (format nil "~A~%" _)] x)))
 
 (defun assemble-expression (x &key (ensure? nil))
@@ -50,7 +58,7 @@
           (progn
             (print *pc*)
             (print operand)
-          (error "Branch out of range (~A)." !))))))
+          (assembler-error "Branch out of range (~A)." !))))))
 
 (defun assemble-instruction (out mnemonic addrmode operand)
   (let inst (assemble-mnemonic-addrmode mnemonic addrmode)
@@ -102,7 +110,7 @@
 
 (defun assemble-end ()
   (| *block-stack*
-     (error "Unexpected directive 'end'."))
+     (assembler-error "Unexpected directive 'end'."))
   (= *data?* (pop *block-stack*))
   (= *disabled?* (pop *block-stack*)))
 
@@ -113,7 +121,7 @@
     'if    (assemble-if out x)
     'data  (assemble-data out x)
     'end   (assemble-end)
-    (error "Unsupported directive ~A." x)))
+    (assembler-error "Unsupported directive ~A." x)))
 
 (defun assemble (out x)
   (?
@@ -127,37 +135,41 @@
       'directive    (assemble-directive out x)
       'identifier   (assemble-identifier out .x)
       'expression   (assemble-toplevel-expression out x)
-      (error "Unexpected parser expression ~A." x))))
+      (assembler-error "Unexpected parsed expression ~A." x))))
 
-(defun assemble-and-dump (out x line)
+(defun assemble-dump-line (pc bytes line)
+  (let o *assembler-dump-stream*
+    (fresh-line o)
+    (print-hexword pc o)
+    (princ ":" o)
+    (format o " ~A ~A :" *acycles* (| *cycles* " "))
+    (& *cycles* (+! *acycles* *cycles*))
+    (adolist ((string-list bytes))
+      (princ " " o)
+      (print-hexbyte (char-code !) o))
+    (while (< (stream-location-column (stream-output-location o)) 26)
+           nil
+       (princ " " o))
+    (princ line o)))
+
+(defun assemble-and-dump (out x)
   (= *cycles* nil)
   (with-string-stream o
     (let pc *pc*
       (assemble o x)
       (let bytes (get-stream-string o)
-        (when bytes
-          (fresh-line)
-          (print-hexword pc)
-          (princ ":")
-          (format t " ~A ~A :" *acycles* (| *cycles* " "))
-          (& *cycles* (+! *acycles* *cycles*))
-          (adolist ((string-list bytes))
-            (princ " ")
-            (print-hexbyte (char-code !))))
-        (while (< (stream-location-column (stream-output-location *standard-output*)) 26)
-               nil
-          (princ " "))
-        (princ line)
-        (princ bytes out)))))
+        (when (length bytes)
+          (assemble-dump-line pc bytes *assembler-current-line*.)
+          (princ bytes out))))))
 
 (defun assemble-parsed-expressions (out x)
   (adolist x
-    (let line !.
+    (with-temporary *assembler-current-line* !
       (adolist (.!)
-          (? *disabled?*
-             (? (equal ! '(directive end))
-                (assemble-end))
-             (assemble-and-dump out ! line))))))
+        (? *disabled?*
+           (? (equal ! '(directive end))
+              (assemble-end))
+           (assemble-and-dump out !))))))
 
 (defun assemble-pass (out x)
   (= *pc* 0)
@@ -170,16 +182,21 @@
     (assemble-pass out i)))
 
 (defun assemble-files (out-name &rest in-names)
-  (format t "Assembling to '~A'…~%" out-name)
-  (let parsed (parse-files in-names)
-    (clear-labels)
-    (= *pass* 0)
-    (alet *pc*
-      (while (| *label-changed?*
-                (< *pass* 3))
-             nil
-        (= *label-changed?* nil)
-        (assemble-pass-to-file out-name parsed)
-        (++! *pass*))))
+  (let dump-name (+ out-name ".lst")
+    (format t "Assembling to '~A'. Dump file is '~A'…~%"
+            out-name dump-name)
+    (with-output-file dump (+ out-name ".lst")
+      (with-temporary *assembler-dump-stream* dump
+        (let parsed (parse-files in-names)
+          (clear-labels)
+          (= *pass* 0)
+          (alet *pc*
+            (while (| *label-changed?*
+                      (< *pass* 3))
+                   nil
+              (format t "Pass ~A…~%" *pass*)
+              (= *label-changed?* nil)
+              (assemble-pass-to-file out-name parsed)
+              (++! *pass*)))))))
   (rewind-labels)
   nil)

@@ -114,9 +114,12 @@
     (with-queue q
       (while (peek-char i)
              (queue-list q)
-        (let ci (make-copying-stream :in i)
+        (with (ci       (make-copying-stream :in i)
+               file-id  (stream-location-id (stream-input-location i))
+               line-nr  (stream-location-line (stream-input-location i)))
           (let-when parsed (parse (remove-if #'not (tokenize-line ci)))
-            (enqueue q (. (copying-stream-recorded-in ci)
+            (enqueue q (. (. (copying-stream-recorded-in ci)
+                             (. file-id line-nr))
                           parsed))))))))
 
 (defun parse-string (source)
