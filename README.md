@@ -179,15 +179,26 @@ also comes with a couple of directives for additional comfort.
 
 ### org <addr>
 
-Set the program counter to the specified address. Would do the
-same like:
+Set the program counter to the specified address.
+
 ```
-@(& (= *pc* <addr>) nil)
+    org $1001
+```
+
+Would do the same like:
+```
+@(& (= *pc* #x1001) nil)
 ```
 
 ### fill <num_bytes>
 
-Fills in num_bytes zeroes.  With Lisp expressions it would be:
+Fills in num_bytes zeroes.
+```
+    fill 256    ; Fill page with zeroes.
+```
+
+With Lisp expressions it would be:
+
 ```
 @(maptimes [identity 0] <num_bytes>)
 ```
@@ -198,10 +209,27 @@ Assembles the following lines if the argument is not NIL.
 0 is not NIL.  if it is NIL all following lines up to an "end"
 directive are ignored.
 
+```
+if @*with-feature-x?*
+    …some code…
+end
+```
+
 ### data
 
 Causes the assembler to mute output until an "end" directive is
 found.  Great for layouting zero pages for example.
+
+```
+    ; Some example zero page.
+    org 0
+    data
+s:      0 0
+d:      0 0
+scr:    0
+count:  0
+    end
+```
 
 ### end
 
