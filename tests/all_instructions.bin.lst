@@ -2,7 +2,6 @@
 ; Pass 2
 ;
 ; Adress | Cycles | Accumulated cycles | Bytes | Source
-0000:   0 :              l1:bcc l1
 0000: 2 0 : 90 fe        l1:bcc l1
 0002: 2 2 : b0 fc        bcs l1
 0004: 2 4 : f0 fa        beq l1

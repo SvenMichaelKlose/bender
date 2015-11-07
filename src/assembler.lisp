@@ -158,7 +158,7 @@
     (let pc *pc*
       (assemble o x)
       (let bytes (get-stream-string o)
-        (when (length bytes)
+        (unless (zero? (length bytes))
           (assemble-dump-line pc bytes)
           (princ bytes out))))))
 
