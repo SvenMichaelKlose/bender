@@ -15,6 +15,14 @@
 (assemble-files "obj/inline-lisp.bin"
                 "tests/inline-lisp.asm")
 
+(with-output-file o "obj/test.tap"
+  (write-tap o
+    (bin2cbmtap (string-list (fetch-file "obj/all_instructions.bin"))
+                "ALL INSTRUCTIONS"
+                :start #x1001)))
+(test-compare-files "obj/test.tap"
+                    "tests/test.tap")
+
 (with-temporary *model* :vic-20
   (assemble-files "obj/cbm-basic-init.prg"
                   "vic-20/basic-loader.asm"
