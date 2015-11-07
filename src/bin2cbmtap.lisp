@@ -120,7 +120,7 @@
                          data)
          len   (length data)
          end   (+ start len))
-    (format t "CBM file name is ~A.~%" name)
+    (format t "CBM file name is '~A'.~%" (subseq name 0 16))
     (format t "CBM file type is ~A.~%" type)
     (format t "Start: $~A, end: $~A~%"
             (print-hexword start nil)
