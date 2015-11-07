@@ -200,7 +200,7 @@ directive are ignored.
 
 ### data
 
-Causes the assemble to mute output until an "end" directive is
+Causes the assembler to mute output until an "end" directive is
 found.  Great for layouting zero pages for example.
 
 ### end
