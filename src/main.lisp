@@ -18,7 +18,6 @@
 (load "src/assembler.lisp")
 (load "src/vice.lisp")
 (load "src/bin2cbmtap.lisp")
-(load "src/decode-cbmtap.lisp")
 (load "src/tap.lisp")
 (load "src/tap2wav.lisp")
 (load "src/ascii2petscii.lisp")
