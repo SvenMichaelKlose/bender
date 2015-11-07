@@ -12,7 +12,7 @@
 
 (defun assembler-error (x &rest fmt)
   (alet *assembler-current-line*.
-    (error "Error while assembling '~A', line ~A:~%~A~A"
+    (error "~LError while assembling '~A', line ~A:~%~A~A"
            (cadr !) (cddr !)
            !.
            (apply #'format nil x fmt))))

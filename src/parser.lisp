@@ -3,7 +3,7 @@
 (defvar *parser-stream* nil)
 
 (defun parser-error (x &rest fmt)
-  (error "In ~A, line ~A: ~A"
+  (error "~LError while parsing '~A', line ~A: ~A"
          (stream-location-id (stream-input-location *parser-stream*))
          (stream-location-line (stream-input-location *parser-stream*))
          (apply #'format nil x fmt)))
