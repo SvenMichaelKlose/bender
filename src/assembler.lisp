@@ -78,7 +78,10 @@
 (defun assemble-toplevel-expression (out x)
   (alet (assemble-expression x)
     (?
-      (cons? !)    (assemble-parsed-expressions out !)
+      (cons? !)    (? (number? !.)
+                      (adolist !
+                        (assemble-byte out !))
+                      (assemble-parsed-expressions out !))
       (string? !)  (assemble-string out !)
       (assemble-byte out !))))
 

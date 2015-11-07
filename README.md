@@ -121,7 +121,7 @@ text: @(@ #'ascii2petscii "Hello world!") 0
 
 Toplevel expressions are expected to return
 
-* numbers,
+* numbers or lists of numbers,
 * strings,
 * lists of parsed expressions or
 * NIL.
