@@ -1,6 +1,5 @@
 @(progn
-   (terpri)
-   (format t "Printing something from assembly code.~%")
+   (format t "~LPrinting something from assembly code.~%")
    (asm "jmp $1234"))
 
 @(progn
