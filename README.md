@@ -5,6 +5,7 @@ written in the Lisp dialect tré.  Bender can:
 
 * assemble programs
 * disassemble binaries (very incomplete)
+* generate VICE monitor command files
 * generate TAP and WAV files
 * generate C code for 6502 emulation and disassembly
 
@@ -20,7 +21,7 @@ https://github.com/SvenMichaelKlose/shadowVIC/
 
 # Installation
 
-Run 'make.sh'.
+Run 'make.sh' to generate a tré SBCL image called 'bender'.
 
 
 # Syntax
