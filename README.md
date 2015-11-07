@@ -244,3 +244,46 @@ count:  0
 ### end
 
 Ends an "if" or "data" directive.
+
+```
+    end
+```
+
+# Assembling programs
+
+## ASSEMBLE-FILES output-file &REST input-files
+
+Takes a list of input files and generates a binary output file.
+
+The following example generates file 'example.prg' as well as
+an assembler dump of all passes to 'example.prg.lst':
+
+```
+(assemble-files "example.prg"
+                "zeropage.asm"
+                "example.asm")
+```
+
+## GET-LABELS – Importing/exporting labels across assemblies
+
+GET-LABELS returns an associative list of the labels found
+in the last call to ASSEMBLE-FILES.  If assigned to global
+variable *IMPORTED-LABELS*, they are used as a fallback in
+the next call to ASSEMBLE-FILES:
+
+```
+(assemble-files "core.prg" "core.asm")
+
+(with-temporary *imported-labels* (get-labels)
+  (assemble-files "loader.prg" "loader.asm")
+```
+
+## MAKE-VICE-COMMANDS output-file &OPTIONAL additional-commands
+
+Generate a VICE monitor file and appends optional additional
+commands with the data collected from the last call of
+ASSEMBLE-FILES.
+
+```
+(make-vice-commands "example.txt" "break .stop")
+```
