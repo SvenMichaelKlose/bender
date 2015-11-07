@@ -74,11 +74,16 @@ l1:
 
 ## Applying Lisp expressions
 
-Lisp expressions can be inserted with the @ character.
-They may span multiple lines.
+Lisp expressions can be inserted starting with the @ character.
+They replace the more familiar inline arithmetic expressions
+other assemblers use and may span multiple lines.
 
 ```
-    ldx #@(- table_end table_start) ; Load X with size of table.
+    ; NOT used in Bender;
+    ldx #table_end-tablestart
+
+    ; Instead use a Lisp expression:
+    ldx #@(- table_end table_start)
 ```
 
 Expressions can be used at toplevel as well.
@@ -89,8 +94,45 @@ text: @(@ #'ascii2petscii (string-list "Hello world!"))
       0
 ```
 
-Toplevel expressions are expected to return numbers, strings or a
-lists of parsed expressions.  A parsed expression can be a number,
+Toplevel expressions are expected to return
+
+* numbers,
+* strings,
+* lists of parsed expressions or
+* NIL.
+
+
+### ASM expressions
+
+These expressions start with the symbol ASM followed by one
+or more strings with regular assembly source code or further
+ASM expressions in them.
+
+That way you can use Lisp macros more easily than with the
+parsed expressions explained in the next section.
+
+```
+@(progn
+   (defmacro inc16 (x)
+     `(asm ,(format nil "
+                      inc ~A
+                      bne +n
+                      inc @(++ ~A)
+                    n:"
+                    x x))
+      nil) ; No parsed expression returned!
+
+some_code:
+    @(inc16 "ptr")
+```
+
+Admittedly, this looks ugly but it also is a good basis for
+Lispy extensions, and thus, work in progress.
+
+
+### Parsed expressions
+
+A parsed expression can be a number,
 a string or an expression of the following form:
 
 ```
@@ -98,7 +140,7 @@ a string or an expression of the following form:
 (IDENTIFIER . name)
 (DIRECTIVE name parameters)
 (INSTRUCTION mnemonic addressing-mode operand)
-(EXPRESSION . tré-expression)
+(EXPRESSION . Lisp expression)
 ```
 
 IDENTIFIER gets the value of a label.  An operand can be a number,

@@ -15,6 +15,11 @@
 (defun assemble-mnemonic-addrmode (mnemonic addrmode)
   (opcode-instruction (generate-opcode mnemonic addrmode)))
 
+(defmacro asm (&rest x)
+  (| (every #'string? x)
+     (error "ASM expects one or more string."))
+  `'(,@(mapcan [parse-string (format nil "~A~%" _)] x)))
+
 (defun assemble-expression (x &key (ensure? nil))
   (| (& (number? x) x)
      (case x.
@@ -73,7 +78,7 @@
 (defun assemble-toplevel-expression (out x)
   (alet (assemble-expression x)
     (?
-      (cons? !)    (assemble-parsed-expressions out (list (. nil !)))
+      (cons? !)    (assemble-parsed-expressions out !)
       (string? !)  (assemble-string out !)
       (assemble-byte out !))))
 
