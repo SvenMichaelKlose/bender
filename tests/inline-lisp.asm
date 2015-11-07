@@ -1,5 +1,5 @@
 @(progn
-   (format t "~LPrinting something from assembly code.~%")
+   (format t "~LPrinting something from inlined Lisp expression.~%")
    (asm "jmp $1234"))
 
 @(progn
