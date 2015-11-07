@@ -189,7 +189,7 @@ same like:
 
 Fills in num_bytes zeroes.  With Lisp expressions it would be:
 ```
-@(maptimes [0] <num_bytes>)
+@(maptimes [identity 0] <num_bytes>)
 ```
 
 ### if <Lisp boolean>
