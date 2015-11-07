@@ -142,7 +142,7 @@
     (fresh-line o)
     (print-hexword pc o)
     (princ ":" o)
-    (format o " ~A ~A :" *acycles* (| *cycles* " "))
+    (format o " ~A ~A :" (| *cycles* " ") *acycles*)
     (& *cycles* (+! *acycles* *cycles*))
     (adolist ((string-list bytes))
       (princ " " o)
@@ -181,6 +181,12 @@
   (with-output-file out name
     (assemble-pass out i)))
 
+(defun print-dump-header (o)
+  (format o ";~%")
+  (format o "; Pass ~A~%" *pass*)
+  (format o ";~%")
+  (format o "; Adress | Cycles | Accumulated cycles | Bytes | Source~%"))
+
 (defun assemble-files (out-name &rest in-names)
   (let dump-name (+ out-name ".lst")
     (format t "Assembling to '~A'. Dump file is '~A'…~%"
@@ -195,7 +201,7 @@
                       (< *pass* 3))
                    nil
               (format t "Pass ~A…~%" *pass*)
-              (format dump ";~%; Pass ~A~%;~%" *pass*)
+              (print-dump-header dump)
               (= *label-changed?* nil)
               (assemble-pass-to-file out-name parsed)
               (++! *pass*)))))))
