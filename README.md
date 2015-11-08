@@ -220,11 +220,31 @@ With Lisp expressions this would be:
 
 ### if <Lisp boolean>
 
-Assembles the following lines unless its arguments is NIL.
+Assembles the following lines unless its arguments is NIL
+until an 'end' directive is reached.  The lines are always
+being parsed.  'if' can be nested.
+
 
 ```
 if @*with-feature-x?*
     …some code…
+end
+```
+
+You must be aware that zero is not NIL, so this example
+might not do what you would expect:
+
+```
+if 0
+    jmp oh_no   ; Still assembled!
+end
+```
+
+If you want to disable code, do it like this:
+
+```
+if @nil
+    jmp oh_no   ; Not assembled.
 end
 ```
 
