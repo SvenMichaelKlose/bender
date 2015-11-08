@@ -43,6 +43,8 @@
   (++! *pc*))
 
 (defun assemble-operand (out inst operand)
+  (when (character? operand)
+    (= operand (char-code operand)))
   (when (eq 'branch (instruction-addrmode inst))
     (= operand (- operand *pc* 1)))
   (dotimes (i (instruction-operand-size inst))
@@ -158,8 +160,8 @@
     (let pc *pc*
       (assemble o x)
       (let bytes (get-stream-string o)
+        (assemble-dump-line pc bytes)
         (unless (zero? (length bytes))
-          (assemble-dump-line pc bytes)
           (princ bytes out))))))
 
 (defun assemble-parsed-expressions (out x)
