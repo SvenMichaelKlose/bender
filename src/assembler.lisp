@@ -9,7 +9,6 @@
 (defvar *block-stack* nil)
 (defvar *cycles* nil)
 (defvar *acycles* 0)
-
 (defun assembler-error (x &rest fmt)
   (alet *assembler-current-line*.
     (error "~LError while assembling '~A', line ~A:~%~A~A"
@@ -28,14 +27,15 @@
      (assembler-error "ASM expects one or more string."))
   (mapcan [parse-string (format nil "~A~%" _)] x))
 
-(defun assemble-expression (x &key (ensure? nil))
+(defun assemble-expression (x &key (ensure? nil) (not-zero? nil))
   (| (& (number? x) x)
      (case x.
        'expression  (unless (& (not ensure?)
                                (first-pass?))
                       (eval (macroexpand (labels-to-exprs .x))))
        'identifier  (get-label .x :required? (not (first-pass?))))
-     0))
+     (unless not-zero?
+       0)))
 
 (defun assemble-byte (out x)
   (| *data?*
@@ -101,7 +101,7 @@
 (defun assemble-if (out x)
   (push *disabled?* *block-stack*)
   (push *data?* *block-stack*)
-  (= *disabled?* (zero? (assemble-expression ..x. :ensure? t))))
+  (= *disabled?* (not (assemble-expression ..x. :ensure? t :not-zero? t))))
 
 (defun assemble-data (out x)
   (push *disabled?* *block-stack*)
