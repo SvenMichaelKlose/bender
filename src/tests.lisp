@@ -4,16 +4,18 @@
   (| (string== (fetch-file a) (fetch-file b))
      (error "Test failed! Files '~A' and '~A' differ." a b)))
 
-(assemble-files "obj/all_instructions.bin" "tests/all_instructions.asm")
-(test-compare-files "obj/all_instructions.bin"
-                    "tests/all_instructions.bin")
-(test-compare-files "obj/all_instructions.bin.lst"
-                    "tests/all_instructions.bin.lst")
+(defun do-bender-test (name)
+  (with (source    (+ "tests/" name ".asm")
+         result    (+ "obj/" name ".bin")
+         reference (+ "tests/" name ".bin"))
+    (assemble-files result source)
+    (test-compare-files result reference)))
 
 (disassemble-file "tests/all_instructions.bin" "obj/all_instructions_diassembled.lst")
 
-(assemble-files "obj/inline-lisp.bin"
-                "tests/inline-lisp.asm")
+(do-bender-test "all_instructions")
+(do-bender-test "inline-lisp")
+(do-bender-test "if")
 
 (with-output-file o "obj/test.tap"
   (write-tap o

@@ -1,3 +1,5 @@
+@nil
+
 @(progn
    (format t "~LPrinting something from inlined Lisp expression.~%")
    (asm "jmp $1234"))
