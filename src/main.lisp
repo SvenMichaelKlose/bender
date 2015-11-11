@@ -16,6 +16,7 @@
 (load "src/labels-to-exprs.lisp")
 (load "src/helpers.lisp")
 (load "src/assembler.lisp")
+
 (load "src/vice.lisp")
 (load "src/bin2cbmtap.lisp")
 (load "src/tap.lisp")
@@ -23,8 +24,10 @@
 (load "src/ascii2petscii.lisp")
 (load "src/cbm-basic.lisp")
 (load "src/model.lisp")
-(load "src/tests.lisp")
 (load "src/vic-palettes.lisp")
+(load "src/minigrafik.lisp")
+(load "src/tests.lisp")
+
 (load "src/gen-c-cycle-map.lisp")
 (load "src/gen-c-emulator.lisp")
 (load "src/gen-c-opcode-map.lisp")
