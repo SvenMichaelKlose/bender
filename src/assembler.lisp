@@ -39,7 +39,7 @@
 
 (defun assemble-byte (out x)
   (| *data?*
-     (princ (code-char x) out))
+     (write-byte x out))
   (++! *pc*))
 
 (defun assemble-operand (out inst operand)

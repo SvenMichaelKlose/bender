@@ -10,24 +10,21 @@
 (defconstant +cbmtype-seq-file-header+  4)
 (defconstant +cbmtype-end-of-tape+      5)
 
-(defun write-pulse (o len)
-  (princ (code-char len) o))
-
 (defun write-gap (o)
   (format t "Making empty gap...~%")
-  (write-pulse o 0)
-  (write-pulse o #x7a)
-  (write-pulse o #xfb)
-  (write-pulse o #x05))
+  (write-byte 0 o)
+  (write-byte #x7a o)
+  (write-byte #xfb o)
+  (write-byte #x05 o))
 
 (defun write-short (o)
-  (write-pulse o +short+))
+  (write-byte +short+ o))
 
 (defun write-medium (o)
-  (write-pulse o +medium+))
+  (write-byte +medium+ o))
 
 (defun write-long (o)
-  (write-pulse o +long+))
+  (write-byte +long+ o))
 
 (defun write-bit (o x)
   (? (zero? x)
@@ -57,7 +54,7 @@
       (= x (>> x 1)))
     (write-bit o chk)))
 
-(defun write-byte (o x)
+(defun write-byte-with-checksumming (o x)
   (= *chk* (bit-xor *chk* x))
   (write-byte-without-checksumming o x))
 
@@ -69,7 +66,7 @@
 (defun write-sync (o repeated?)
   (format t "Making ~Async...~%" (? repeated? "repeated " ""))
   (dolist (i '(9 8 7 6 5 4 3 2 1))
-    (write-byte o (+ (? repeated? 0 128) i))))
+    (write-byte-with-checksumming o (+ (? repeated? 0 128) i))))
 
 (defun write-interblock-gap (o)
   (format t "Making interblock gap...~%")
@@ -90,15 +87,15 @@
   (write-sync o repeated?)
   (format t "Making ~Aheader...~%" (? repeated?  "repeated " ""))
   (= *chk* 0)
-  (write-byte o type)
-  (write-byte o (mod start 256))
-  (write-byte o (>> start 8))
-  (write-byte o (mod end 256))
-  (write-byte o (>> end 8))
+  (write-byte-with-checksumming o type)
+  (write-byte-with-checksumming o (mod start 256))
+  (write-byte-with-checksumming o (>> start 8))
+  (write-byte-with-checksumming o (mod end 256))
+  (write-byte-with-checksumming o (>> end 8))
   (dolist (i (string-list name))
-    (write-byte o i))
+    (write-byte-with-checksumming o i))
   (dotimes (i (- 187 (length name)))
-    (write-byte o 32))
+    (write-byte-with-checksumming o 32))
   (write-byte-without-checksumming o *chk*)
   (write-eod o))
 
@@ -109,7 +106,7 @@
           (length data))
   (= *chk* 0)
   (adolist data
-    (write-byte o !))
+    (write-byte-with-checksumming o !))
   (write-byte-without-checksumming o *chk*)
   (write-eod o))
 
