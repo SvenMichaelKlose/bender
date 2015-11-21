@@ -57,14 +57,16 @@
                                    m))))
 
 (defun stream-instruction (in)
-  (awhen (read-char in)
+  (awhen (read-byte in)
     (aprog1 (opcode-instruction !)
       (dotimes (i (instruction-operand-size !))
-        (push (read-char in) (instruction-operand !))))))
+        (push (read-byte in) (instruction-operand !))))))
 
 (defun disassemble-file (in-name out-name)
-  (with-input-file i in-name
-    (with-output-file o out-name
-      (awhile (stream-instruction i)
-              nil
-        (print-instruction ! o)))))
+  (with-input-file in in-name
+    (with-output-file out out-name
+      (let pc 0
+        (awhile (stream-instruction in)
+                nil
+          (print-instruction ! pc out)
+          (= pc (+ pc (instruction-size !))))))))

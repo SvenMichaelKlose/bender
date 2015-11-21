@@ -25,6 +25,17 @@
 (defun instruction-operand-size (inst)
   (addrmode-size (instruction-addrmode inst)))
 
+(defun instruction-size (inst)
+  (++ (instruction-operand-size inst)))
+
+(def-instruction instruction-branch-address (instruction pc)
+  (| (eq addrmode 'branch)
+     (error "Cannot determine a destination address for non–branch ~A." mnemonic))
+  (alet (car (instruction-operand instruction))
+    (+ pc 2 ! (? (< 127 !)
+                 -256
+                 0))))
+
 (def-instruction instruction-optimize-addrmode (instruction)
   (unless (in? mnemonic 'jmp 'jsr)
     (= (instruction-addrmode instruction)

@@ -9,7 +9,7 @@
             r)
       (= x (>> x 4)))))
 
-(def-instruction print-operand (instruction &optional (o *standard-output*))
+(def-instruction print-operand (instruction pc &optional (o *standard-output*))
   (princ " " o)
   (unless (in? addrmode 'accu 'single)
     (? (eq addrmode 'imm)
@@ -18,7 +18,7 @@
        (princ "(" o))
     (princ "$" o)
     (? (eq addrmode 'branch)
-       (princ "xx" o)
+       (print-hexword (instruction-branch-address instruction pc) o)
        (princ (apply #'+ (filter [hex _ 2] (instruction-operand instruction))) o))
     (? (in? addrmode 'izpy 'indi)
        (princ ")" o))
@@ -29,7 +29,7 @@
     (? (in? addrmode 'izpx)
        (princ ")" o))))
 
-(def-instruction print-instruction (instruction &optional (out *standard-output*))
+(def-instruction print-instruction (instruction pc &optional (out *standard-output*))
   (format out "    ~A " (downcase (symbol-name mnemonic)))
-  (print-operand instruction out)
+  (print-operand instruction pc out)
   (terpri out))
