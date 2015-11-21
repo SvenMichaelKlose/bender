@@ -68,5 +68,7 @@
       (let pc 0
         (awhile (stream-instruction in)
                 nil
+          (princ "$" out)
+          (print-hexword pc out)
           (print-instruction ! pc out)
           (= pc (+ pc (instruction-size !))))))))
