@@ -6,9 +6,15 @@
 (defvar *pass* nil)
 (defvar *disabled?* nil)
 (defvar *data?* nil)
-(defvar *block-stack* nil)
 (defvar *cycles* nil)
 (defvar *acycles* 0)
+
+(defvar *block-stack* nil)
+
+(defstruct codeblock
+  name
+  returner)
+
 (defun assembler-error (x &rest fmt)
   (alet *assembler-current-line*.
     (error "~LError while assembling '~A', line ~A:~%~A~A"
@@ -100,25 +106,39 @@
     (adotimes ((assemble-expression ..x.))
       (assemble-byte out 0))))
 
+(defun make-returner ()
+  (with (disabled?  *disabled?*
+         data?      *data?*)
+    #'(()
+        (= *disabled?* disabled?
+           *data?*     data?))))
+
+(defun push-codeblock (name)
+  (push (make-codeblock :name name
+                        :returner (make-returner))
+        *block-stack*))
+
 (defun assemble-if (out x)
-  (push *disabled?* *block-stack*)
-  (push *data?* *block-stack*)
+  (push-codeblock 'if)
   (= *disabled?* (not (assemble-expression ..x. :ensure? t :not-zero? t))))
 
 (defun assemble-data (out x)
-  (push *disabled?* *block-stack*)
-  (push *data?* *block-stack*)
+  (push-codeblock 'data)
   (= *data?* t))
 
 (defun assemble-block (out x)
-  (push *disabled?* *block-stack*)
-  (push *data?* *block-stack*))
+  (push-codeblock 'block))
 
-(defun assemble-end ()
+(defun assemble-end (x)
   (| *block-stack*
      (assembler-error "Unexpected directive 'end'."))
-  (= *data?* (pop *block-stack*))
-  (= *disabled?* (pop *block-stack*)))
+  (with (b        (pop *block-stack*)
+         expected (codeblock-name b))
+    (when x
+      (| (eq x expected)
+         (assembler-error "Unexpected end of ~A. Expected ~A."
+                          x expected)))
+    (funcall (codeblock-returner b))))
 
 (defun assemble-directive (out x)
   (case .x.
@@ -127,7 +147,7 @@
     'if     (assemble-if out x)
     'data   (assemble-data out x)
     'block  (assemble-block out x)
-    'end    (assemble-end)
+    'end    (assemble-end (cdr ..x.))
     (assembler-error "Unsupported directive ~A." x)))
 
 (defun assemble (out x)
@@ -174,8 +194,8 @@
     (with-temporary *assembler-current-line* !
       (adolist (.!)
         (? *disabled?*
-           (? (equal ! '(directive end))
-              (assemble-end))
+           (? (equal ! '(directive end)) ; TODO end with block type
+              (assemble-end nil))
            (assemble-and-dump out !))))))
 
 (defun assemble-pass (out x)

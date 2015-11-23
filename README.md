@@ -228,7 +228,7 @@ being parsed.  'if' can be nested.
 ```
 if @*with-feature-x?*
     …some code…
-end
+end if
 ```
 
 You must be aware that zero is not NIL, so this example
@@ -237,7 +237,7 @@ might not do what you would expect:
 ```
 if 0
     jmp oh_no   ; Still assembled!
-end
+end if
 ```
 
 If you want to disable code, do it like this:
@@ -245,7 +245,7 @@ If you want to disable code, do it like this:
 ```
 if @nil
     jmp oh_no   ; Not assembled.
-end
+end if
 ```
 
 ### data
@@ -261,15 +261,28 @@ s:      0 0
 d:      0 0
 scr:    0
 count:  0
-    end
+    end data
 ```
+
+### block
+
+Under construction. The directive `block` will be used to tell bender
+to fill up virtual entities called segments.
+
+At the moment this directive does absolutely nothing.
 
 ### end
 
-Ends an "if" or "data" directive.
+Ends an "if", "data" or "block" directive. The name of the directive
+that should be ended should be passed as an argument.
+
 
 ```
-    end
+    ; The four possible forms of `end`.
+    end if
+    end data
+    end block
+    end ; To be deprecated, soon.
 ```
 
 # Assembling programs
