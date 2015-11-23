@@ -110,6 +110,10 @@
   (push *data?* *block-stack*)
   (= *data?* t))
 
+(defun assemble-block (out x)
+  (push *disabled?* *block-stack*)
+  (push *data?* *block-stack*))
+
 (defun assemble-end ()
   (| *block-stack*
      (assembler-error "Unexpected directive 'end'."))
@@ -118,11 +122,12 @@
 
 (defun assemble-directive (out x)
   (case .x.
-    'org   (= *pc* (assemble-expression ..x.))
-    'fill  (assemble-fill out x)
-    'if    (assemble-if out x)
-    'data  (assemble-data out x)
-    'end   (assemble-end)
+    'org    (= *pc* (assemble-expression ..x.))
+    'fill   (assemble-fill out x)
+    'if     (assemble-if out x)
+    'data   (assemble-data out x)
+    'block  (assemble-block out x)
+    'end    (assemble-end)
     (assembler-error "Unsupported directive ~A." x)))
 
 (defun assemble (out x)
