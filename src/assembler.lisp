@@ -9,11 +9,20 @@
 (defvar *cycles* nil)
 (defvar *acycles* 0)
 
-(defvar *block-stack* nil)
-
-(defstruct codeblock
+(defstruct sourceblock
   name
-  returner)
+  returner
+  (exprs (make-queue))
+  pc-start
+  pc-end)
+
+(def-sourceblock sourceblock-size (sourceblock)
+  (- pc-end pc-start))
+
+(defvar *sourceblock-stack* nil)
+
+(defvar *unassigned-segment-blocks* nil)
+(defvar *fill-up-segments?* nil)
 
 (defun assembler-error (x &rest fmt)
   (alet *assembler-current-line*.
@@ -109,36 +118,50 @@
 (defun make-returner ()
   (with (disabled?  *disabled?*
          data?      *data?*)
-    #'(()
-        (= *disabled?* disabled?
-           *data?*     data?))))
+    [= *disabled?* disabled?
+       *data?*     data?]))
 
-(defun push-codeblock (name)
-  (push (make-codeblock :name name
-                        :returner (make-returner))
-        *block-stack*))
+(defun push-sourceblock (name)
+  (push (make-sourceblock :name name
+                          :returner (make-returner))
+        *sourceblock-stack*))
 
 (defun assemble-if (out x)
-  (push-codeblock 'if)
+  (push-sourceblock 'if)
   (= *disabled?* (not (assemble-expression ..x. :ensure? t :not-zero? t))))
 
 (defun assemble-data (out x)
-  (push-codeblock 'data)
+  (push-sourceblock 'data)
   (= *data?* t))
 
+(defun make-block-returner ()
+  (alet (make-returner)
+    [(push _ *unassigned-segment-blocks*)
+     (funcall ! _)]))
+
 (defun assemble-block (out x)
-  (push-codeblock 'block))
+  (push (make-sourceblock :name 'block
+                          :returner (make-block-returner)
+                          :pc-start *pc*)
+        *sourceblock-stack*))
 
 (defun assemble-end (x)
-  (| *block-stack*
-     (assembler-error "Unexpected directive 'end'."))
-  (with (b        (pop *block-stack*)
-         expected (codeblock-name b))
-    (when x
-      (| (eq x expected)
-         (assembler-error "Unexpected end of ~A. Expected ~A."
-                          x expected)))
-    (funcall (codeblock-returner b))))
+  ; TODO a proper parser would do wonders here.
+  (| *sourceblock-stack*
+     (assembler-error "Unexpected END. No block open."))
+  (& ...x
+     (assembler-error "END doesn't expect more than one optional argument. (IF, DATA or BLOCK.)"))
+  (| (in? (cdr ..x.) nil 'if 'data 'block)
+     (assembler-error "END expects IF, DATA or BLOCK as an argument."))
+  (with (b        (pop *sourceblock-stack*)
+         name     (cdr ..x.)
+         expected (sourceblock-name b))
+    (when name
+      (| (eq name expected)
+         (assembler-error "Unexpected END of ~A. Expected ~A."
+                          name expected)))
+    (= (sourceblock-pc-end b) *pc*)
+    (funcall (sourceblock-returner b) b)))
 
 (defun assemble-directive (out x)
   (case .x.
@@ -147,7 +170,7 @@
     'if     (assemble-if out x)
     'data   (assemble-data out x)
     'block  (assemble-block out x)
-    'end    (assemble-end (cdr ..x.))
+    'end    (assemble-end x)
     (assembler-error "Unsupported directive ~A." x)))
 
 (defun assemble (out x)
@@ -193,6 +216,8 @@
   (adolist x
     (with-temporary *assembler-current-line* !
       (adolist (.!)
+        (let-when b (car *sourceblock-stack*)
+          (enqueue (sourceblock-exprs b) !))
         (? *disabled?*
            (? (equal ! '(directive end)) ; TODO end with block type
               (assemble-end nil))
@@ -217,20 +242,22 @@
         (print-dump-header dump)
         (assemble-pass out i)))))
 
+(defun assemble-parsed-files (out-name dump-name x)
+  (clear-labels)
+  (= *pass* 0)
+  (while (| *label-changed?*
+            (< *pass* 3))
+         nil
+    (format t "Pass ~A…~%" *pass*)
+    (= *label-changed?* nil)
+    (assemble-pass-to-file out-name dump-name x)
+    (++! *pass*)))
+
 (defun assemble-files (out-name &rest in-names)
-  (let dump-name (+ out-name ".lst")
-    (format t "Assembling to '~A'. Dump file is '~A'…~%"
-            out-name dump-name)
-        (let parsed (parse-files in-names)
-          (clear-labels)
-          (= *pass* 0)
-          (alet *pc*
-            (while (| *label-changed?*
-                      (< *pass* 3))
-                   nil
-              (format t "Pass ~A…~%" *pass*)
-              (= *label-changed?* nil)
-              (assemble-pass-to-file out-name dump-name parsed)
-              (++! *pass*)))))
-  (rewind-labels)
+  (with-temporary *unassigned-segment-blocks* nil
+    (let dump-name (+ out-name ".lst")
+      (format t "Assembling to '~A'. Dump file is '~A'…~%"
+              out-name dump-name)
+      (assemble-parsed-files out-name dump-name (parse-files in-names)))
+    (rewind-labels))
   nil)
