@@ -266,8 +266,8 @@ count:  0
 
 ### BLOCK
 
-This directive collects code to put it into SEGMENTs in the last
-pass.
+This directive collects code to put it into SEGMENTs in the
+last pass.
 
 ```
 block
@@ -279,10 +279,10 @@ block
 end
 ```
 
-### SEGMENT <size>
+### SEGMENT <size> [may-be-shorter?]
 
-Fills the specified number of bytes with recently unassigned BLOCKs,
-starting with the biggest BLOCK that fits in.
+Fills the specified number of bytes with recently unassigned
+BLOCKs, starting with the biggest BLOCK that fits in.
 
 ```
     segment $318            ; Before VIC–20 NMI vector.
@@ -290,10 +290,18 @@ starting with the biggest BLOCK that fits in.
     segment (- #x400 $31a)  ; After VIC–20 NMI vector.
 ```
 
+If the optional last argument is not NIL, the segment is not
+filled up with zeroes to match its desired size.
+
+```
+    ; e.g. last segment in code:
+    segment $ffff @t    ; Eat up all unassigned BLOCKs.
+```
+
 ### END
 
-Ends an "if", "data" or "block" directive. The name of the directive
-that should be ended should be passed as an argument.
+Ends an "if", "data" or "block" directive.  The name of the
+directive that should be ended should be passed as an argument.
 
 
 ```

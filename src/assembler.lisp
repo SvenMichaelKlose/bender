@@ -150,13 +150,25 @@
         *sourceblock-stack*)
   (= *disabled?* *assign-blocks-to-segments?*))
 
-(defun assign-segment-block (out bytes-left)
-  (awhen (& (< 9 bytes-left)
-            (find-if [<= (sourceblock-size _) bytes-left] *unassigned-segment-blocks*))
-    (= *unassigned-segment-blocks* (remove ! *unassigned-segment-blocks* :test #'eq))
-    (format t "Assigned block of size ~A.~%" (sourceblock-size !))
-    (assemble-parsed-expressions out (butlast (queue-list (sourceblock-exprs !))))
-    (assign-segment-block out (- bytes-left (sourceblock-size !)))))
+(defun fill-up-remaining-segment (out bytes-left)
+  (unless (zero? bytes-left)
+    (format t "Filling up remaining segment space with ~A zeroes.~%" bytes-left)
+    (adotimes bytes-left
+      (assemble-byte out 0))))
+
+(defun assign-segment-block (out bytes-left b may-be-shorter?)
+  (= *unassigned-segment-blocks* (remove b *unassigned-segment-blocks* :test #'eq))
+  (format t "Assigned block of size ~A.~%" (sourceblock-size b))
+  (assemble-parsed-expressions out (butlast (queue-list (sourceblock-exprs b))))
+  (try-to-assign-segment-block out (- bytes-left (sourceblock-size b)) may-be-shorter?))
+
+(defun try-to-assign-segment-block (out bytes-left may-be-shorter?)
+  (!? (& (< 9 bytes-left)
+         (find-if [<= (sourceblock-size _) bytes-left] *unassigned-segment-blocks*))
+      (assign-segment-block out bytes-left ! may-be-shorter?)
+      (? may-be-shorter?
+         (format t "Shortened segment by ~A bytes due to extra argument T.~%" bytes-left)
+         (fill-up-remaining-segment out bytes-left))))
 
 (defun assemble-segment (out x)
   (| ..x
@@ -166,7 +178,7 @@
       (& (zero? !)
          (assembler-error "SEGMENT size must be larger than 0."))
       (format t "Filling up segment of size ~a…~%" !)
-      (assign-segment-block out !))))
+      (try-to-assign-segment-block out ! (assemble-expression ...x. :ensure? t :not-zero? t)))))
 
 (defun assemble-end (x)
   ; TODO a proper parser would do wonders here.
