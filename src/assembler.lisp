@@ -255,16 +255,19 @@
     (assemble-pass-to-file out-name dump-name x)
     (++! *pass*)))
 
+(defun check-on-unassigned-blocks ()
+  (awhen *unassigned-segment-blocks*
+    (assembler-error "~A BLOCKs couldn't get assigned to SEGMENTs (~A bytes). Remaining blocks: ~A"
+                     (length *unassigned-segment-blocks*)
+                     (apply #'+ (@ #'sourceblock-size *unassigned-segment-blocks*))
+                     *unassigned-segment-blocks*)))
+
 (defun assemble-files (out-name &rest in-names)
   (with-temporary *unassigned-segment-blocks* nil
     (let dump-name (+ out-name ".lst")
       (format t "Assembling to '~A'. Dump file is '~A'…~%"
               out-name dump-name)
       (assemble-parsed-files out-name dump-name (parse-files in-names)))
-    (awhen *unassigned-segment-blocks*
-      (assembler-error "~A BLOCKs couldn't get assigned to SEGMENTs (~A bytes). Remaining blocks: ~A"
-                       (length *unassigned-segment-blocks*)
-                       (apply #'+ (@ #'sourceblock-size *unassigned-segment-blocks*))
-                       *unassigned-segment-blocks*))
+    (check-on-unassigned-blocks)
     (rewind-labels))
   nil)
