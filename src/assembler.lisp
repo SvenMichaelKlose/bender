@@ -26,9 +26,10 @@
 
 (defun assembler-error (x &rest fmt)
   (alet *assembler-current-line*.
-    (error "~LError while assembling '~A', line ~A:~%~A~A"
-           (cadr !) (cddr !)
-           !.
+    (error (+ (when (cadr !)
+                (format nil "~LError while assembling '~A', line ~A:~%~A"
+                            (cadr !) (cddr !) !.))
+              "~A")
            (apply #'format nil x fmt))))
 
 (defun first-pass? ()
@@ -243,6 +244,7 @@
         (assemble-pass out i)))))
 
 (defun assemble-parsed-files (out-name dump-name x)
+  (= *unassigned-segment-blocks* nil)
   (clear-labels)
   (= *pass* 0)
   (while (| *label-changed?*
@@ -259,5 +261,10 @@
       (format t "Assembling to '~A'. Dump file is '~A'…~%"
               out-name dump-name)
       (assemble-parsed-files out-name dump-name (parse-files in-names)))
+    (awhen *unassigned-segment-blocks*
+      (assembler-error "~A BLOCKs couldn't get assigned to SEGMENTs (~A bytes). Remaining blocks: ~A"
+                       (length *unassigned-segment-blocks*)
+                       (apply #'+ (@ #'sourceblock-size *unassigned-segment-blocks*))
+                       *unassigned-segment-blocks*))
     (rewind-labels))
   nil)
