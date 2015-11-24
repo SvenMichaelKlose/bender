@@ -163,6 +163,8 @@
      (assembler-error "SEGMENT expects a size."))
   (when *assign-blocks-to-segments?*
     (alet (assemble-expression ..x. :ensure? t)
+      (& (zero? !)
+         (assembler-error "SEGMENT size must be larger than 0."))
       (format t "Filling up segment of size ~a…~%" !)
       (assign-segment-block out !))))
 
@@ -237,11 +239,14 @@
 (defun assemble-parsed-expressions (out x)
   (adolist x
     (with-temporary *assembler-current-line* !
-      (let-when b (car *sourceblock-stack*)
-        (enqueue (sourceblock-exprs b) !))
+      (| *assign-blocks-to-segments?*
+         (let-when b (car *sourceblock-stack*)
+           (enqueue (sourceblock-exprs b) !)))
       (adolist (.!)
         (? *disabled?*
-           (? (equal ! '(directive end)) ; TODO end with block type
+           (? (& (cons? !)
+                 (eq !. 'directive)
+                 (eq .!. 'end))
               (assemble-end nil))
            (assemble-and-dump out !))))))
 
@@ -270,7 +275,7 @@
                                                  (>= (sourceblock-size a)
                                                      (sourceblock-size b))))))
 
-(defun assemble-parsed-files (out-name dump-name x)
+(defun assemble-parsed-files-0 (out-name dump-name x &key (unassigned-segment-blocks nil))
   (clear-labels)
   (= *pass* 0)
   (while (| *label-changed?*
@@ -278,13 +283,19 @@
          nil
     (format t "Pass ~A…~%" *pass*)
     (= *label-changed?* nil
-       *unassigned-segment-blocks* nil)
+       *unassigned-segment-blocks* unassigned-segment-blocks)
     (assemble-pass-to-file out-name dump-name x)
     (++! *pass*))
-  (when *unassigned-segment-blocks*
+  (awhen *sourceblock-stack*
+    (assembler-error "Block(s) with no END: ~A" !)))
+
+(defun assemble-parsed-files (out-name dump-name x)
+  (assemble-parsed-files-0 out-name dump-name x)
+  (awhen *unassigned-segment-blocks*
+    (format t "Assembling again to assign BLOCKs to SEGMENTS…~%")
     (sort-unassigned-segment-blocks)
     (with-temporary *assign-blocks-to-segments?* t
-      (assemble-pass-to-file out-name dump-name x))))
+      (assemble-parsed-files-0 out-name dump-name x :unassigned-segment-blocks !))))
 
 (defun check-on-unassigned-blocks ()
   (awhen *unassigned-segment-blocks*
