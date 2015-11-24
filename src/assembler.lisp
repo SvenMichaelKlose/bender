@@ -22,7 +22,7 @@
 (defvar *sourceblock-stack* nil)
 
 (defvar *unassigned-segment-blocks* nil)
-(defvar *fill-up-segments?* nil)
+(defvar *assign-blocks-to-segments?* nil)
 
 (defun assembler-error (x &rest fmt)
   (alet *assembler-current-line*.
@@ -128,6 +128,8 @@
         *sourceblock-stack*))
 
 (defun assemble-if (out x)
+  (| ..x
+     (assembler-error "IF expects a Lisp expression."))
   (push-sourceblock 'if)
   (= *disabled?* (not (assemble-expression ..x. :ensure? t :not-zero? t))))
 
@@ -137,14 +139,32 @@
 
 (defun make-block-returner ()
   (alet (make-returner)
-    [(push _ *unassigned-segment-blocks*)
+    [(| *assign-blocks-to-segments?*
+        (push _ *unassigned-segment-blocks*))
      (funcall ! _)]))
 
 (defun assemble-block (out x)
   (push (make-sourceblock :name 'block
                           :returner (make-block-returner)
                           :pc-start *pc*)
-        *sourceblock-stack*))
+        *sourceblock-stack*)
+  (= *disabled?* *assign-blocks-to-segments?*))
+
+(defun assign-segment-block (out bytes-left)
+  (awhen (& (< 9 bytes-left)
+            (find-if [<= (sourceblock-size _) bytes-left] *unassigned-segment-blocks*))
+    (= *unassigned-segment-blocks* (remove ! *unassigned-segment-blocks* :test #'eq))
+    (format t "Assigned block of size ~A.~%" (sourceblock-size !))
+    (assemble-parsed-expressions out (butlast (queue-list (sourceblock-exprs !))))
+    (assign-segment-block out (- bytes-left (sourceblock-size !)))))
+
+(defun assemble-segment (out x)
+  (| ..x
+     (assembler-error "SEGMENT expects a size."))
+  (when *assign-blocks-to-segments?*
+    (alet (assemble-expression ..x. :ensure? t)
+      (format t "Filling up segment of size ~a…~%" !)
+      (assign-segment-block out !))))
 
 (defun assemble-end (x)
   ; TODO a proper parser would do wonders here.
@@ -166,12 +186,13 @@
 
 (defun assemble-directive (out x)
   (case .x.
-    'org    (= *pc* (assemble-expression ..x.))
-    'fill   (assemble-fill out x)
-    'if     (assemble-if out x)
-    'data   (assemble-data out x)
-    'block  (assemble-block out x)
-    'end    (assemble-end x)
+    'org      (= *pc* (assemble-expression ..x.))
+    'fill     (assemble-fill out x)
+    'if       (assemble-if out x)
+    'data     (assemble-data out x)
+    'block    (assemble-block out x)
+    'segment  (assemble-segment out x)
+    'end      (assemble-end x)
     (assembler-error "Unsupported directive ~A." x)))
 
 (defun assemble (out x)
@@ -216,9 +237,9 @@
 (defun assemble-parsed-expressions (out x)
   (adolist x
     (with-temporary *assembler-current-line* !
+      (let-when b (car *sourceblock-stack*)
+        (enqueue (sourceblock-exprs b) !))
       (adolist (.!)
-        (let-when b (car *sourceblock-stack*)
-          (enqueue (sourceblock-exprs b) !))
         (? *disabled?*
            (? (equal ! '(directive end)) ; TODO end with block type
               (assemble-end nil))
@@ -243,17 +264,27 @@
         (print-dump-header dump)
         (assemble-pass out i)))))
 
+(defun sort-unassigned-segment-blocks ()
+  (= *unassigned-segment-blocks* (sort *unassigned-segment-blocks*
+                                       :test #'((a b)
+                                                 (>= (sourceblock-size a)
+                                                     (sourceblock-size b))))))
+
 (defun assemble-parsed-files (out-name dump-name x)
-  (= *unassigned-segment-blocks* nil)
   (clear-labels)
   (= *pass* 0)
   (while (| *label-changed?*
             (< *pass* 3))
          nil
     (format t "Pass ~A…~%" *pass*)
-    (= *label-changed?* nil)
+    (= *label-changed?* nil
+       *unassigned-segment-blocks* nil)
     (assemble-pass-to-file out-name dump-name x)
-    (++! *pass*)))
+    (++! *pass*))
+  (when *unassigned-segment-blocks*
+    (sort-unassigned-segment-blocks)
+    (with-temporary *assign-blocks-to-segments?* t
+      (assemble-pass-to-file out-name dump-name x))))
 
 (defun check-on-unassigned-blocks ()
   (awhen *unassigned-segment-blocks*

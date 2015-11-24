@@ -192,7 +192,7 @@ The assembler could be controlled with Lisp expressions but
 Bender also comes with a couple of directives for additional
 comfort.
 
-### org <addr>
+### ORG <addr>
 
 Set the program counter to the specified address.
 
@@ -205,7 +205,7 @@ Would do the same like:
 @(& (= *pc* #x1001) nil)
 ```
 
-### fill <num_bytes>
+### FILL <num_bytes>
 
 Fills in num_bytes zeroes.
 ```
@@ -218,7 +218,7 @@ With Lisp expressions this would be:
 @(maptimes [identity 0] 256)
 ```
 
-### if <Lisp boolean>
+### IF <Lisp boolean>
 
 Assembles the following lines unless its arguments is NIL
 until an 'end' directive is reached.  The lines are always
@@ -248,7 +248,7 @@ if @nil
 end if
 ```
 
-### data
+### DATA
 
 Causes the assembler to mute output until an "end" directive
 is found.  Great for layouting zero pages for example:
@@ -264,14 +264,33 @@ count:  0
     end data
 ```
 
-### block
+### BLOCK
 
-Under construction. The directive `block` will be used to tell bender
-to fill up virtual entities called segments.
+This directive collects code to put it into SEGMENTs in the last
+pass.
 
-At the moment this directive does absolutely nothing.
+```
+block
+    "This will go into any SEGMENT later."
+end
 
-### end
+block
+    "This as well."
+end
+```
+
+### SEGMENT <size>
+
+Fills the specified number of bytes with recently unassigned BLOCKs,
+starting with the biggest BLOCK that fits in.
+
+```
+    segment $318            ; Before VIC–20 NMI vector.
+    0 0                     ; VIC–20 NMI vector.
+    segment (- #x400 $31a)  ; After VIC–20 NMI vector.
+```
+
+### END
 
 Ends an "if", "data" or "block" directive. The name of the directive
 that should be ended should be passed as an argument.
