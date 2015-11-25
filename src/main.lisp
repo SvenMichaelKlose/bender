@@ -6,10 +6,12 @@
 
 (load "src/6502.lisp")
 (load "src/instruction.lisp")
-(load "src/print.lisp")
-(load "src/disassembler.lisp")
-(load "src/instruction-map.lisp")
 (load "src/cycles.lisp")
+
+(load "src/disassembler/print.lisp")
+(load "src/disassembler/toplevel.lisp")
+
+(load "src/instruction-map.lisp")
 
 (load "src/assembler/labels.lisp")
 (load "src/assembler/tokenizer.lisp")
@@ -19,19 +21,23 @@
 (load "src/assembler/vice.lisp")
 (load "src/assembler/toplevel.lisp")
 
-(load "src/bin2cbmtap.lisp")
-(load "src/tap.lisp")
-(load "src/tap2wav.lisp")
-(load "src/ascii2petscii.lisp")
-(load "src/cbm-basic.lisp")
-(load "src/model.lisp")
-(load "src/vic-palettes.lisp")
-(load "src/minigrafik.lisp")
-(load "src/tests.lisp")
+(load "src/tap/bin2cbmtap.lisp")
+(load "src/tap/tap.lisp")
+(load "src/tap/tap2wav.lisp")
 
-(load "src/gen-c-cycle-map.lisp")
-(load "src/gen-c-emulator.lisp")
-(load "src/gen-c-opcode-map.lisp")
+(load "src/cbm/ascii2petscii.lisp")
+
+(load "src/cbm-basic/keywords.lisp")
+(load "src/cbm-basic/start-addresses.lisp")
+
+(load "src/vic-20/palettes.lisp")
+(load "src/vic-20/minigrafik.lisp")
+
+(load "src/c/gen-c-cycle-map.lisp")
+(load "src/c/gen-c-emulator.lisp")
+(load "src/c/gen-c-opcode-map.lisp")
+
+(load "src/tests.lisp")
 
 (gen-c-cycle-map "c/cycle-map.c")
 (gen-c-emulator "c/6502-instructions.c")
