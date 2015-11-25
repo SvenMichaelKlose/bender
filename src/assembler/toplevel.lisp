@@ -1,6 +1,7 @@
 ; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
 (defvar *assembler-current-line* nil)
+(defvar *assembler-output-stream* nil)
 (defvar *assembler-dump-stream* nil)
 (defvar *pc* nil)
 (defvar *pass* nil)
@@ -108,7 +109,7 @@
                         0)))
 
 (defun assemble-toplevel-expression (out x)
-  (awhen (assemble-expression x :not-zero? t)
+  (awhen (assemble-expression x :ensure? t :not-zero? t)
     (?
       (cons? !)    (? (number? !.)
                       (adolist !
@@ -173,7 +174,7 @@
          (find-if [<= (sourceblock-size _) bytes-left] *unassigned-segment-blocks*))
       (assign-segment-block out bytes-left ! may-be-shorter?)
       (? may-be-shorter?
-         (format t "Shortened segment by ~A bytes due to extra argument T.~%" bytes-left)
+         (format t "Trimmed segment by ~A bytes.~%" bytes-left)
          (fill-up-remaining-segment out bytes-left))))
 
 (defun fill-segment (out size may-be-shorter?)
@@ -182,14 +183,14 @@
   (format t "Filling up segment of size ~a…~%" size)
   (try-to-assign-segment-block out size may-be-shorter?))
 
-(defun assemble-segment (out x)
-  (| ..x
+(defun segment (&key size (may-be-shorter? nil))
+  (| (number? size)
      (assembler-error "SEGMENT expects a size."))
   (? *assign-blocks-to-segments?*
-     (fill-segment out (assemble-expression ..x. :ensure? t)
-                       (assemble-expression ...x. :ensure? t :not-zero? t))
-     (enqueue *segments* (make-segment :size (assemble-expression ..x. :ensure? t)
-                                       :may-be-shorter? (assemble-expression ...x. :ensure? t :not-zero? t)))))
+     (fill-segment *assembler-output-stream* size may-be-shorter?)
+     (enqueue *segments* (make-segment :size size
+                                       :may-be-shorter? may-be-shorter?)))
+  nil)
 
 (defun assemble-end (x)
   ; TODO a proper parser would do wonders here.
@@ -216,7 +217,6 @@
     'if       (assemble-if out x)
     'data     (assemble-data out x)
     'block    (assemble-block out x)
-    'segment  (assemble-segment out x)
     'end      (assemble-end x)
     (assembler-error "Unsupported directive ~A." x)))
 
@@ -274,10 +274,11 @@
            (assemble-and-dump out !))))))
 
 (defun assemble-pass (out x)
-  (= *pc* 0)
-  (= *acycles* 0)
-  (rewind-labels)
-  (assemble-parsed-expressions out x))
+  (with-temporary *assembler-output-stream* out
+    (= *pc* 0)
+    (= *acycles* 0)
+    (rewind-labels)
+    (assemble-parsed-expressions out x)))
 
 (defun print-dump-header (o)
   (format o ";~%")

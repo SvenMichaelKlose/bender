@@ -267,7 +267,7 @@ count:  0
 ### BLOCK
 
 This directive collects code to put it into SEGMENTs in the
-last pass.
+last pass.  See also function SEGMENT.
 
 ```
 block
@@ -277,25 +277,6 @@ end
 block
     "This as well."
 end
-```
-
-### SEGMENT <size> [may-be-shorter?]
-
-Fills the specified number of bytes with recently unassigned
-BLOCKs, starting with the biggest BLOCK that fits in.
-
-```
-    segment $318            ; Before VIC–20 NMI vector.
-    0 0                     ; VIC–20 NMI vector.
-    segment (- #x400 $31a)  ; After VIC–20 NMI vector.
-```
-
-If the optional last argument is not NIL, the segment is not
-filled up with zeroes to match its desired size.
-
-```
-    ; e.g. last segment in code:
-    segment $ffff @t    ; Eat up all unassigned BLOCKs.
 ```
 
 ### END
@@ -311,6 +292,29 @@ directive that should be ended should be passed as an argument.
     end block
     end ; To be deprecated, soon.
 ```
+
+## Assembly source lisp functions
+
+### Function (SEGMENT &KEY size (may-be-shorter? NIL))
+
+This is a function called from assembly sources.  It fills
+the specified number of bytes with recently unassigned
+BLOCKs, starting with the biggest BLOCK that fits in.
+
+```
+    @(segment :size #x318)           ; Before NMI vector.
+    0 0                              ; NMI vector.
+    @(segment :size (- #x400 $31a))  ; After NMI vector.
+```
+
+If the optional last argument is not NIL, the segment is not
+filled up with zeroes to match its desired size.
+
+```
+    ; e.g. last segment in code:
+    @(segment :size #xffff :may-be-shorter? t)  ; Eat up all unassigned BLOCKs.
+```
+
 
 # Assembling programs
 

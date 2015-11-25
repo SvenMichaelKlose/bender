@@ -1,10 +1,9 @@
 block
-    "This will fill a segment."
+    "01234567"
 end
 block
-    "This one as well."
+    "ABCDEFGH"
 end
 
-segment 256
-
-segment 256 @t
+@(segment :size 256)
+@(segment :size 256 :may-be-shorter? t)
