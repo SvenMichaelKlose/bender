@@ -108,7 +108,7 @@
                         0)))
 
 (defun assemble-toplevel-expression (out x)
-  (alet (assemble-expression x)
+  (awhen (assemble-expression x :not-zero? t)
     (?
       (cons? !)    (? (number? !.)
                       (adolist !
