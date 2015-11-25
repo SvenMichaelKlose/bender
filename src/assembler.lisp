@@ -21,6 +21,12 @@
 
 (defvar *sourceblock-stack* nil)
 
+(defstruct segment
+  size
+  (may-be-shorter? nil)
+  (sourceblocks nil))
+
+(defvar *segments* nil)
 (defvar *unassigned-segment-blocks* nil)
 (defvar *assign-blocks-to-segments?* nil)
 
@@ -170,15 +176,20 @@
          (format t "Shortened segment by ~A bytes due to extra argument T.~%" bytes-left)
          (fill-up-remaining-segment out bytes-left))))
 
+(defun fill-segment (out size may-be-shorter?)
+  (& (zero? size)
+     (assembler-error "SEGMENT size must be larger than 0."))
+  (format t "Filling up segment of size ~a…~%" size)
+  (try-to-assign-segment-block out size may-be-shorter?))
+
 (defun assemble-segment (out x)
   (| ..x
      (assembler-error "SEGMENT expects a size."))
-  (when *assign-blocks-to-segments?*
-    (alet (assemble-expression ..x. :ensure? t)
-      (& (zero? !)
-         (assembler-error "SEGMENT size must be larger than 0."))
-      (format t "Filling up segment of size ~a…~%" !)
-      (try-to-assign-segment-block out ! (assemble-expression ...x. :ensure? t :not-zero? t)))))
+  (? *assign-blocks-to-segments?*
+     (fill-segment out (assemble-expression ..x. :ensure? t)
+                       (assemble-expression ...x. :ensure? t :not-zero? t))
+     (enqueue *segments* (make-segment :size (assemble-expression ..x. :ensure? t)
+                                       :may-be-shorter? (assemble-expression ...x. :ensure? t :not-zero? t)))))
 
 (defun assemble-end (x)
   ; TODO a proper parser would do wonders here.
@@ -287,7 +298,8 @@
                                                  (>= (sourceblock-size a)
                                                      (sourceblock-size b))))))
 
-(defun assemble-parsed-files-0 (out-name dump-name x &key (unassigned-segment-blocks nil))
+(defun assemble-parsed-files-0 (out-name dump-name x &key (unassigned-segment-blocks nil)
+                                                          (segments (make-queue)))
   (clear-labels)
   (= *pass* 0)
   (while (| *label-changed?*
@@ -295,7 +307,8 @@
          nil
     (format t "Pass ~A…~%" *pass*)
     (= *label-changed?* nil
-       *unassigned-segment-blocks* unassigned-segment-blocks)
+       *unassigned-segment-blocks* unassigned-segment-blocks
+       *segments* segments)
     (assemble-pass-to-file out-name dump-name x)
     (++! *pass*))
   (awhen *sourceblock-stack*
@@ -307,7 +320,8 @@
     (format t "Assembling again to assign BLOCKs to SEGMENTS…~%")
     (sort-unassigned-segment-blocks)
     (with-temporary *assign-blocks-to-segments?* t
-      (assemble-parsed-files-0 out-name dump-name x :unassigned-segment-blocks !))))
+      (assemble-parsed-files-0 out-name dump-name x :unassigned-segment-blocks !
+                                                    :segments *segments*))))
 
 (defun check-on-unassigned-blocks ()
   (awhen *unassigned-segment-blocks*
