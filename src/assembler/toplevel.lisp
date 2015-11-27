@@ -39,6 +39,15 @@
               "~A")
            (apply #'format nil x fmt))))
 
+(defun assembler-hint (x &rest fmt)
+  (when (< 2 *pass*)
+    (alet *assembler-current-line*.
+      (when (cadr !)
+        (format t (+ (format nil "~LHint for '~A', line ~A:~%~A"
+                                 (cadr !) (cddr !) !.)
+                     "~A~%")
+                  (apply #'format nil x fmt))))))
+
 (defun first-pass? ()
   (< *pass* 1))
 
@@ -70,10 +79,15 @@
     (= operand (char-code operand)))
   (when (eq 'branch (instruction-addrmode inst))
     (= operand (- operand *pc* 1))
-    (& (< 1 *pass*)
+    (& (< 2 *pass*)
        (| (< operand -128)
-          (> operand 127)))
-       (assembler-error "Branch is out of range (~A bytes)." operand))
+          (> operand 127))
+       (assembler-error "Branch is out of range (~A bytes)." operand)))
+  (when (& (eq (instruction-mnemonic inst) 'jmp)
+           (alet (- operand *pc* 1)
+             (| (>= operand -128)
+                (<= operand 127))))
+    (assembler-hint "JMP is short enough for a branch."))
   (dotimes (i (instruction-operand-size inst))
     (assemble-byte out (mod operand 256))
     (= operand (>> operand 8))))
@@ -308,7 +322,7 @@
   (clear-labels)
   (= *pass* 0)
   (while (| *label-changed?*
-            (< *pass* 3))
+            (< *pass* 4))
          nil
     (format t "Pass ~A…~%" *pass*)
     (= *label-changed?* nil
