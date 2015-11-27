@@ -16,7 +16,6 @@
 (def-head-predicate bracket-close)
 (def-head-predicate assignment)
 (def-head-predicate label)
-(def-head-predicate instruction)
 
 (defun parse-labels (x)
   (& x
@@ -29,21 +28,21 @@
 (defun number-or-identifier? (x)
   (in? x. 'identifier 'number 'expression))
 
-(defun parse-addrmode (x)
+(defun parse-operand (x)
   (?
     (not x)
-      (list 'accu nil)
+      (values 'accu nil)
     (eq 'hash x..)
       (progn
         (| (number-or-identifier? .x.)
            (parser-error "Expression expected instead of ~A." (car .x.)))
-        (list 'imm .x.))
+        (values 'imm .x.))
     (number-or-identifier? x.)
       (? (not .x)
-         (list 'abs x.)
+         (values 'abs x.)
          (? (comma? .x.)
             (? (identifier? ..x.)
-               (list (case (cdr ..x.)
+               (values (case (cdr ..x.)
                        'x  'absx
                        'y  'absy
                        (parser-error "Index register expected instead of '~A'." (cdr ..x.)))
@@ -58,17 +57,17 @@
            (?
              (comma? ...x.)
                (?
-                 (eq 'y (cdr ....x.))  (list 'izpy .x.)
+                 (eq 'y (cdr ....x.))  (values 'izpy .x.)
                  (parser-error "Index register Y expected."))
              ...x.
                (parser-error "Comma or end of line expected instead of ~A." (car ...x.))
-             (list 'indi .x.))
+             (values 'indi .x.))
            (comma? ..x.)
              (? (identifier? ...x.)
                 (?
                   (eq 'x (cdr ...x.))
                     (? (bracket-close? ....x.)
-                       (list 'izpx .x.)
+                       (values 'izpx .x.)
                        (parser-error "Closing bracket expected instead of ~A." ....x.))
                   (parser-error "Index register X expected."))
                 (parser-error "Index register X expected."))
@@ -94,7 +93,10 @@
       (case x.. :test #'eq
         'label       (. x. (parse-0 .x))
         'directive   (parse-directive x)
-        'mnemonic    `((instruction ,(cdr x.) ,@(parse-addrmode .x)))
+        'mnemonic    (with ((addrmode operand-expression) (parse-operand .x))
+                       (list (make-instruction :mnemonic x..
+                                               :addrmode addrmode
+                                               :operand-expression operand-expression)))
         (? (identifier? x.)
            (? (assignment? .x.)
               (parse-assignment x)

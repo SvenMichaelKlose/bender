@@ -1,8 +1,5 @@
 ; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
-(defun assemble-mnemonic-addrmode (mnemonic addrmode)
-  (opcode-instruction (generate-opcode mnemonic addrmode)))
-
 (defun asm (&rest x)
   (| (every #'string? x)
      (assembler-error "ASM expects one or more string."))
@@ -44,11 +41,9 @@
   (write-byte (instruction-opcode instruction) out)
   (instruction-write-operand instruction out))
 
-(defun assemble-instruction (mnemonic addrmode operand-expression)
-  (aprog1 (assemble-mnemonic-addrmode mnemonic addrmode)
-    (= (instruction-address !) *pc*)
-    (= (instruction-operand-expression !) operand-expression)
-    (instruction-optimize-addrmode !)))
+(defun assemble-instruction (instruction)
+  (= (instruction-address instruction) *pc*)
+  (instruction-optimize-addrmode instruction))
 
 (defun assemble-assignment (x)
   (add-label .x. (assemble-expression ..x.)))
@@ -71,11 +66,11 @@
 
 (defun assemble (x)
   (?
-    (string? x)  (assemble-string x)
-    (number? x)  x
+    (string? x)       (assemble-string x)
+    (number? x)       x
+    (instruction? x)  (assemble-instruction x)
     (case x.
       'label        x ;(add-label .x *pc*)
-      'instruction  (assemble-instruction .x. ..x. ...x.)
       'assignment   x ;(assemble-assignment x)
       'directive    x ;(assemble-directive x)
       'identifier   x ;(assemble-identifier .x)
@@ -83,17 +78,20 @@
       (assembler-error "Unexpected parsed expression ~A." x))))
 
 (defun assemble-parsed-expressions (x)
+  (print x)
   (mapcan [with-temporary *assembler-current-line* _
             (| *assign-blocks-to-segments?*
                (let-when b (car *sourceblock-stack*)
                  (enqueue (sourceblock-exprs b) _)))
-            (@ [? *disabled?*
-                  (? (& (cons? _)
-                        (eq _. 'directive)
-                        (eq ._. 'end))
-                     (assemble-end nil))
-                  (assemble _)]
-               ._)]
+            (? (cons? ._)
+               (@ [? *disabled?*
+                     (? (& (cons? _)
+                           (eq _. 'directive)
+                           (eq ._. 'end))
+                        (assemble-end nil))
+                     (assemble _)]
+                  ._)
+               (list (assemble ._)))]
           x))
 
 (defun assemble-parsed-files-0 (out-name dump-name x &key (unassigned-segment-blocks nil)
