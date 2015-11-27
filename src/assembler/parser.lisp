@@ -25,20 +25,22 @@
            (parse-labels ..x))
         (. x. (parse-labels .x)))))
 
-(defun number-or-identifier? (x)
-  (in? x. 'identifier 'number 'expression))
+(defun operand-expression? (x)
+  (| (number? x)
+     (in? x. 'identifier 'expression)))
 
 (defun parse-operand (x)
   (?
     (not x)
       (values 'accu nil)
-    (eq 'hash x..)
+    (& (cons? x.)
+       (eq 'hash x..))
       (progn
-        (| (number-or-identifier? .x.)
+        (| (operand-expression? .x.)
            (parser-error "Expression expected instead of ~A."
                          (car .x.)))
         (values 'imm .x.))
-    (number-or-identifier? x.)
+    (operand-expression? x.)
       (? (not .x)
          (values 'abs x.)
          (? (comma? .x.)
@@ -54,7 +56,7 @@
                           (car .x.))))
     (bracket-open? x.)
       (progn
-        (| (number-or-identifier? .x.)
+        (| (operand-expression? .x.)
            (parser-error "Expression expected instead of ~A."
                          (car .x.)))
         (? (bracket-close? ..x.)
@@ -90,9 +92,9 @@
 
 (defun parse-atoms (x)
   (?
-    (& (cons? x)
-       (in? x. 'number 'string))  .x
-    (cons? x)                     (. (parse-atoms x.) (parse-atoms .x))
+    (number? x)  x
+    (string? x)  x
+    (cons? x)    (. (parse-atoms x.) (parse-atoms .x))
     x))
 
 (defun parse-instruction (x)
@@ -104,9 +106,11 @@
 (defun parse-0 (x)
   (when x
     (?
-      (not x.)  (parse-0 .x)
-      (in? x.. 'number 'string 'expression) (. x. (parse-0 .x))
+      (not x.)      (parse-0 .x)
+      (number? x.)  x
+      (string? x.)  x
       (case x.. :test #'eq
+        'expression  (. x. (parse-0 .x))
         'label       (. x. (parse-0 .x))
         'directive   (parse-directive x)
         'mnemonic    (parse-instruction x)
