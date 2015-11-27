@@ -15,7 +15,6 @@
 (def-head-predicate bracket-open)
 (def-head-predicate bracket-close)
 (def-head-predicate assignment)
-(def-head-predicate label)
 
 (defun parse-labels (x)
   (& x
