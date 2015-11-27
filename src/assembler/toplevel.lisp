@@ -1,62 +1,5 @@
 ; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
-(defvar *assembler-current-line* nil)
-(defvar *assembler-output-stream* nil)
-(defvar *assembler-dump-stream* nil)
-(defvar *pc* nil)
-(defvar *pass* nil)
-(defvar *disabled?* nil)
-(defvar *data?* nil)
-(defvar *cycles* nil)
-(defvar *acycles* 0)
-
-(defstruct sourceblock
-  name
-  returner
-  (exprs (make-queue))
-  pc-start
-  pc-end)
-
-(def-sourceblock sourceblock-size (sourceblock)
-  (- pc-end pc-start))
-
-(defvar *sourceblock-stack* nil)
-
-(defstruct segment
-  size
-  (may-be-shorter? nil)
-  (sourceblocks nil))
-
-(defvar *segments* nil)
-(defvar *unassigned-segment-blocks* nil)
-(defvar *assign-blocks-to-segments?* nil)
-
-(defun assembler-error (x &rest fmt)
-  (alet *assembler-current-line*.
-    (error (+ (when (cadr !)
-                (format nil "~LError while assembling '~A', line ~A:~%~A"
-                            (cadr !) (cddr !) !.))
-              "~A")
-           (apply #'format nil x fmt))))
-
-(defun assembler-hint (x &rest fmt)
-  (when (< 2 *pass*)
-    (alet *assembler-current-line*.
-      (when (cadr !)
-        (format t (+ (format nil "~LHint for '~A', line ~A:~%~A"
-                                 (cadr !) (cddr !) !.)
-                     "~A~%")
-                  (apply #'format nil x fmt))))))
-
-(defun print-dump-header (o)
-  (format o ";~%")
-  (format o "; Pass ~A~%" *pass*)
-  (format o ";~%")
-  (format o "; Adress | Cycles | Accumulated cycles | Bytes | Source~%"))
-
-(defun first-pass? ()
-  (< *pass* 1))
-
 (defun assemble-mnemonic-addrmode (mnemonic addrmode)
   (opcode-instruction (generate-opcode mnemonic addrmode)))
 
@@ -126,110 +69,6 @@
       (string? !)  (assemble-string !)
       !)))
 
-(defun assemble-fill (x)
-  (when (< 1 *pass*)
-    (maptimes [identity 0] (assemble-expression ..x.))))
-
-(defun make-returner ()
-  (with (disabled?  *disabled?*
-         data?      *data?*)
-    [= *disabled?* disabled?
-       *data?*     data?]))
-
-(defun push-sourceblock (name)
-  (push (make-sourceblock :name name
-                          :returner (make-returner))
-        *sourceblock-stack*))
-
-(defun assemble-if (x)
-  (| ..x
-     (assembler-error "IF expects a Lisp expression."))
-  (push-sourceblock 'if)
-  (= *disabled?* (not (assemble-expression ..x. :ensure? t :not-zero? t)))
-  nil)
-
-(defun assemble-data (x)
-  (push-sourceblock 'data)
-  (= *data?* t)
-  nil)
-
-(defun make-block-returner ()
-  (alet (make-returner)
-    [(| *assign-blocks-to-segments?*
-        (push _ *unassigned-segment-blocks*))
-     (funcall ! _)]))
-
-(defun assemble-block (x)
-  (push (make-sourceblock :name 'block
-                          :returner (make-block-returner)
-                          :pc-start *pc*)
-        *sourceblock-stack*)
-  (= *disabled?* *assign-blocks-to-segments?*)
-  nil)
-
-(defun fill-up-remaining-segment (bytes-left)
-  (unless (zero? bytes-left)
-    (format t "Filling up remaining segment space with ~A zeroes.~%" bytes-left)
-    (maptimes [identity 0] bytes-left)))
-
-(defun assign-segment-block (bytes-left b may-be-shorter?)
-  (= *unassigned-segment-blocks* (remove b *unassigned-segment-blocks* :test #'eq))
-  (format t "Assigned block of size ~A.~%" (sourceblock-size b))
-  (+ (assemble-parsed-expressions (butlast (queue-list (sourceblock-exprs b))))
-     (try-to-assign-segment-block (- bytes-left (sourceblock-size b)) may-be-shorter?)))
-
-(defun try-to-assign-segment-block (bytes-left may-be-shorter?)
-  (!? (& (< 9 bytes-left)
-         (find-if [<= (sourceblock-size _) bytes-left] *unassigned-segment-blocks*))
-      (assign-segment-block bytes-left ! may-be-shorter?)
-      (? may-be-shorter?
-         (format t "Trimmed segment by ~A bytes.~%" bytes-left)
-         (fill-up-remaining-segment bytes-left))))
-
-(defun fill-segment (size may-be-shorter?)
-  (& (zero? size)
-     (assembler-error "SEGMENT size must be larger than 0."))
-  (format t "Filling up segment of size ~a…~%" size)
-  (try-to-assign-segment-block size may-be-shorter?))
-
-(defun segment (&key size (may-be-shorter? nil))
-  (| (number? size)
-     (assembler-error "SEGMENT expects a size."))
-  (? *assign-blocks-to-segments?*
-     (fill-segment *assembler-output-stream* size may-be-shorter?)
-     (enqueue *segments* (make-segment :size size
-                                       :may-be-shorter? may-be-shorter?)))
-  nil)
-
-(defun assemble-end (x)
-  ; TODO a proper parser would do wonders here.
-  (| *sourceblock-stack*
-     (assembler-error "Unexpected END. No block open."))
-  (& ...x
-     (assembler-error "END doesn't expect more than one optional argument. (IF, DATA or BLOCK.)"))
-  (| (in? (cdr ..x.) nil 'if 'data 'block)
-     (assembler-error "END expects IF, DATA or BLOCK as an argument."))
-  (with (b        (pop *sourceblock-stack*)
-         name     (cdr ..x.)
-         expected (sourceblock-name b))
-    (when name
-      (| (eq name expected)
-         (assembler-error "Unexpected END of ~A. Expected ~A."
-                          name expected)))
-    (= (sourceblock-pc-end b) *pc*)
-    (funcall (sourceblock-returner b) b))
-  nil)
-
-(defun assemble-directive (x)
-  (case .x.
-    'org      (= *pc* (assemble-expression ..x.))
-    'fill     (assemble-fill x)
-    'if       (assemble-if x)
-    'data     (assemble-data x)
-    'block    (assemble-block x)
-    'end      (assemble-end x)
-    (assembler-error "Unsupported directive ~A." x)))
-
 (defun assemble (x)
   (?
     (string? x)  (assemble-string x)
@@ -242,21 +81,6 @@
       'identifier   x ;(assemble-identifier .x)
       'expression   x ;(assemble-toplevel-expression x)
       (assembler-error "Unexpected parsed expression ~A." x))))
-
-(defun assemble-dump-line (pc bytes)
-  (let o *assembler-dump-stream*
-    (fresh-line o)
-    (print-hexword pc o)
-    (princ ":" o)
-    (format o " ~A ~A :" (| *cycles* " ") *acycles*)
-    (& *cycles* (+! *acycles* *cycles*))
-    (adolist ((string-list bytes))
-      (princ " " o)
-      (print-hexbyte (char-code !) o))
-    (while (< (stream-location-column (stream-output-location o)) 26)
-           nil
-       (princ " " o))
-    (princ *assembler-current-line*.. o)))
 
 (defun assemble-parsed-expressions (x)
   (mapcan [with-temporary *assembler-current-line* _
@@ -271,12 +95,6 @@
                   (assemble _)]
                ._)]
           x))
-
-(defun sort-unassigned-segment-blocks ()
-  (= *unassigned-segment-blocks* (sort *unassigned-segment-blocks*
-                                       :test #'((a b)
-                                                 (>= (sourceblock-size a)
-                                                     (sourceblock-size b))))))
 
 (defun assemble-parsed-files-0 (out-name dump-name x &key (unassigned-segment-blocks nil)
                                                           (segments (make-queue)))
@@ -305,13 +123,6 @@
     (with-temporary *assign-blocks-to-segments?* t
       (assemble-parsed-files-0 out-name dump-name x :unassigned-segment-blocks !
                                                     :segments *segments*))))
-
-(defun check-on-unassigned-blocks ()
-  (awhen *unassigned-segment-blocks*
-    (assembler-error "~A BLOCKs couldn't get assigned to SEGMENTs (~A bytes). Remaining blocks: ~A"
-                     (length *unassigned-segment-blocks*)
-                     (apply #'+ (@ #'sourceblock-size *unassigned-segment-blocks*))
-                     *unassigned-segment-blocks*)))
 
 (defun assemble-files (out-name &rest in-names)
   (with-temporary *unassigned-segment-blocks* nil

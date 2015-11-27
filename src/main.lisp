@@ -13,12 +13,17 @@
 (load "src/disassembler/print.lisp")
 (load "src/disassembler/toplevel.lisp")
 
+(load "src/assembler/global.lisp")
+(load "src/assembler/message.lisp")
 (load "src/assembler/labels.lisp")
 (load "src/assembler/tokenizer.lisp")
 (load "src/assembler/parser.lisp")
 (load "src/assembler/labels-to-exprs.lisp")
 (load "src/assembler/helpers.lisp")
 (load "src/assembler/vice.lisp")
+(load "src/assembler/segment.lisp")
+(load "src/assembler/directives.lisp")
+(load "src/assembler/dump.lisp")
 (load "src/assembler/toplevel.lisp")
 
 (load "src/tap/bin2cbmtap.lisp")
