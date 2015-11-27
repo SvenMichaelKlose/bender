@@ -1,5 +1,18 @@
 ; bender – Copyright (c) 2015 Sven Michael Klose <pixel@copei.de>
 
+(defun test-opcode-instruction-symmetry ()
+  (format t "Testing symmetry of INSTRUCTION-OPCODE and OPCODE-INSTRUCTION: ")
+  (adotimes 256
+    (format t " ~A~F" !)
+    (let i (opcode-instruction !)
+      (unless (eq 'ill (instruction-mnemonic i))
+        (unless (== ! (instruction-opcode i))
+          (print !)
+          (error "Instruction generates opcode ~A instead of ~A."
+                 (print-hexword (instruction-opcode i) nil)
+                 (print-hexword ! nil))))))
+  (format t " – O.K.~%"))
+
 (defun test-compare-files (a b)
   (| (string== (fetch-file a) (fetch-file b))
      (error "Test failed! Files '~A' and '~A' differ." a b)))
@@ -10,6 +23,8 @@
          reference (+ "tests/" name ".bin"))
     (assemble-files result source)
     (test-compare-files result reference)))
+
+(test-opcode-instruction-symmetry)
 
 (disassemble-file "tests/all_instructions.bin" "obj/all_instructions_diassembled.lst")
 
