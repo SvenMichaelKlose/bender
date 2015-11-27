@@ -4,14 +4,14 @@
 (load "environment/platforms/shared/xml-entities.lisp")
 (load "environment/platforms/shared/xml2lml.lisp")
 
-(load "src/6502.lisp")
-(load "src/instruction.lisp")
-(load "src/cycles.lisp")
+(load "src/6502/cpu.lisp")
+(load "src/6502/instruction.lisp")
+(load "src/6502/opcode.lisp")
+(load "src/6502/cycles.lisp")
+(load "src/6502/instruction-map.lisp")
 
 (load "src/disassembler/print.lisp")
 (load "src/disassembler/toplevel.lisp")
-
-(load "src/instruction-map.lisp")
 
 (load "src/assembler/labels.lisp")
 (load "src/assembler/tokenizer.lisp")

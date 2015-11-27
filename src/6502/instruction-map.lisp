@@ -34,10 +34,3 @@
     (format out "~A: ~A~%" i (hashkeys (href *instructions* i)))))
 
 (print-instructions)
-
-(defun generate-opcode (mnemonic addrmode)
-  (alet (href *instructions* mnemonic)
-    (| (href ! addrmode)
-       (? (in? addrmode 'abs 'zp)
-          (href ! 'branch))
-       (error "Incorrect addressing mode ~A for ~A." addrmode mnemonic))))
