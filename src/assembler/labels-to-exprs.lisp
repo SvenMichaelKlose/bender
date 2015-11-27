@@ -15,9 +15,12 @@
                              #\>  `(low ,(f !))))))))
               _])
     (& x
-       (? (atom x)
-          (? (symbol? x)
-             (f x)
-             x)
-          (. (labels-to-exprs x.)
-             (labels-to-exprs .x))))))
+       (?
+         (atom x)
+           (? (symbol? x)
+              (f x)
+               x)
+         (quote? x)
+           x
+         (. (labels-to-exprs x.)
+            (labels-to-exprs .x))))))
