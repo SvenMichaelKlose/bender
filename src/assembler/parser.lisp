@@ -89,13 +89,6 @@
 (defun parse-directive (x)
   `((,(car x.) ,(cdr x.) ,@.x)))
 
-(defun parse-atoms (x)
-  (?
-    (number? x)  x
-    (string? x)  x
-    (cons? x)    (. (parse-atoms x.) (parse-atoms .x))
-    x))
-
 (defun parse-instruction (x)
   (with ((addrmode operand-expression) (parse-operand .x))
     (list (make-instruction :mnemonic x..
@@ -120,8 +113,7 @@
            (parser-error "Unexpected token ~A." x.))))))
 
 (defun parse (x)
-  (awhen (parse-labels x)
-    (parse-atoms (parse-0 !))))
+  (parse-0 (parse-labels x)))
 
 (defun parse-stream (i)
   (with-temporary *parser-stream* i
