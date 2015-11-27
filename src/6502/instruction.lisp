@@ -4,6 +4,7 @@
   address
   mnemonic
   addrmode
+  (operand-expression nil)
   (operand nil))
 
 (defun opcode-aa (x)

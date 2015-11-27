@@ -2,7 +2,6 @@
 
 (defvar *assembler-current-line* nil)
 (defvar *assembler-output-stream* nil)
-(defvar *assembler-output-instructions* nil)
 (defvar *assembler-dump-stream* nil)
 (defvar *pc* nil)
 (defvar *pass* nil)
@@ -77,7 +76,6 @@
        0)))
 
 (defun assemble-byte (x)
-  (++! *pc*)
   (unless *data?*
     x))
 
@@ -103,12 +101,11 @@
   (write-byte (instruction-opcode instruction) out)
   (instruction-write-operand instruction out))
 
-(defun assemble-instruction (mnemonic addrmode operand)
+(defun assemble-instruction (mnemonic addrmode operand-expression)
   (aprog1 (assemble-mnemonic-addrmode mnemonic addrmode)
     (= (instruction-address !) *pc*)
-    (= (instruction-operand !) operand)
-    (instruction-optimize-addrmode !)
-    (= *cycles* (instruction-cycles !))))
+    (= (instruction-operand-expression !) operand-expression)
+    (instruction-optimize-addrmode !)))
 
 (defun assemble-assignment (x)
   (add-label .x. (assemble-expression ..x.)))
@@ -239,7 +236,7 @@
     (number? x)  x
     (case x.
       'label        x ;(add-label .x *pc*)
-      'instruction  (funcall #'assemble-instruction .x. ..x. (assemble-expression ...x.))
+      'instruction  (assemble-instruction .x. ..x. ...x.)
       'assignment   x ;(assemble-assignment x)
       'directive    x ;(assemble-directive x)
       'identifier   x ;(assemble-identifier .x)
@@ -275,20 +272,6 @@
                ._)]
           x))
 
-(defun assemble-pass (x)
-  (= *pc* 0)
-  (= *acycles* 0)
-  (rewind-labels)
-  (assemble-parsed-expressions x))
-
-(defun assemble-pass-to-file (out-name dump-name i)
-  (with-output-file out out-name
-    (with-output-file dump dump-name
-      (with-temporaries (*assembler-output-instructions* (make-queue)
-                         *assembler-dump-stream* dump)
-        (print-dump-header dump)
-        (print (assemble-pass i))))))
-
 (defun sort-unassigned-segment-blocks ()
   (= *unassigned-segment-blocks* (sort *unassigned-segment-blocks*
                                        :test #'((a b)
@@ -306,7 +289,10 @@
     (= *label-changed?* nil
        *unassigned-segment-blocks* unassigned-segment-blocks
        *segments* segments)
-    (assemble-pass-to-file out-name dump-name x)
+    (= *pc* 0)
+    (= *acycles* 0)
+    (rewind-labels)
+    (print (assemble-parsed-expressions x))
     (++! *pass*))
   (awhen *sourceblock-stack*
     (assembler-error "Block(s) with no END: ~A" !)))
