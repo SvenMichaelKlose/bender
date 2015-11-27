@@ -92,21 +92,9 @@
     (assemble-byte out (mod operand 256))
     (= operand (>> operand 8))))
 
-(defun check-branch-range (inst operand)
-  (& (< 3 *pass*)
-     (eq 'branch (instruction-addrmode inst))
-     (alet (- operand *pc*)
-       (& (| (< ! -128)
-             (< 255 !))
-          (progn
-            (print *pc*)
-            (print operand)
-          (assembler-error "Branch out of range (~A)." !))))))
-
 (defun assemble-instruction (out mnemonic addrmode operand)
   (let inst (assemble-mnemonic-addrmode mnemonic addrmode)
     (= (instruction-operand inst) operand)
-    (check-branch-range inst operand)
     (instruction-optimize-addrmode inst)
     (assemble-byte out (instruction-opcode inst))
     (assemble-operand out inst operand)
