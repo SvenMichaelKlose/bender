@@ -6,12 +6,12 @@
 
 (load "src/6502.lisp")
 (load "src/instruction.lisp")
+(load "src/opcode.lisp")
 (load "src/cycles.lisp")
+(load "src/instruction-map.lisp")
 
 (load "src/disassembler/print.lisp")
 (load "src/disassembler/toplevel.lisp")
-
-(load "src/instruction-map.lisp")
 
 (load "src/assembler/labels.lisp")
 (load "src/assembler/tokenizer.lisp")

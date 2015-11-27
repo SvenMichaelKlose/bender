@@ -1,4 +1,4 @@
-;;;;; bender – Copyright (c) 2014 Sven Michael Klose <pixel@copei.de>
+; bender – Copyright (c) 2014 Sven Michael Klose <pixel@copei.de>
 
 (defstruct instruction
   mnemonic
@@ -56,3 +56,10 @@
                     addrmode)
            addrmode))
       (= (instruction-opcode instruction) (generate-opcode mnemonic (instruction-addrmode instruction))))))
+
+(defun generate-opcode (mnemonic addrmode)
+  (alet (href *instructions* mnemonic)
+    (| (href ! addrmode)
+       (? (in? addrmode 'abs 'zp)
+          (href ! 'branch))
+          (error "Incorrect addressing mode ~A for ~A." addrmode mnemonic))))
