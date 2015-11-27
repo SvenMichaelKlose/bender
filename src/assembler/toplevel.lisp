@@ -2,6 +2,7 @@
 
 (defvar *assembler-current-line* nil)
 (defvar *assembler-output-stream* nil)
+(defvar *assembler-output-instructions* nil)
 (defvar *assembler-dump-stream* nil)
 (defvar *pc* nil)
 (defvar *pass* nil)
@@ -48,6 +49,12 @@
                      "~A~%")
                   (apply #'format nil x fmt))))))
 
+(defun print-dump-header (o)
+  (format o ";~%")
+  (format o "; Pass ~A~%" *pass*)
+  (format o ";~%")
+  (format o "; Adress | Cycles | Accumulated cycles | Bytes | Source~%"))
+
 (defun first-pass? ()
   (< *pass* 1))
 
@@ -69,63 +76,62 @@
      (unless not-zero?
        0)))
 
-(defun assemble-byte (out x)
-  (| *data?*
-     (write-byte x out))
-  (++! *pc*))
+(defun assemble-byte (x)
+  (++! *pc*)
+  (unless *data?*
+    x))
 
-(defun assemble-operand (out inst operand)
+(def-instruction assemble-operand (instruction operand)
   (when (character? operand)
     (= operand (char-code operand)))
-  (when (eq 'branch (instruction-addrmode inst))
+  (when (eq 'branch (instruction-addrmode instruction))
     (= operand (- operand *pc* 1))
     (& (< 2 *pass*)
        (| (< operand -128)
           (> operand 127))
        (assembler-error "Branch is out of range (~A bytes)." operand)))
-  (& (eq (instruction-mnemonic inst) 'jmp)
+  (& (eq (instruction-mnemonic instruction) 'jmp)
      (<= -128 (- operand *pc* 1) 127)
-     (assembler-hint "JMP is short enough for a branch."))
+     (assembler-hint "JMP is short enough for a branch.")))
+
+(def-instruction instruction-write-operand (inst out)
   (dotimes (i (instruction-operand-size inst))
-    (assemble-byte out (mod operand 256))
+    (write-byte (mod operand 256) out)
     (= operand (>> operand 8))))
 
-(defun assemble-instruction (out mnemonic addrmode operand)
-  (let inst (assemble-mnemonic-addrmode mnemonic addrmode)
-    (= (instruction-operand inst) operand)
-    (instruction-optimize-addrmode inst)
-    (assemble-byte out (instruction-opcode inst))
-    (assemble-operand out inst operand)
-    (= *cycles* (instruction-cycles inst))))
+(def-instruction instruction-write (instruction out)
+  (write-byte (instruction-opcode instruction) out)
+  (instruction-write-operand instruction out))
+
+(defun assemble-instruction (mnemonic addrmode operand)
+  (aprog1 (assemble-mnemonic-addrmode mnemonic addrmode)
+    (= (instruction-address !) *pc*)
+    (= (instruction-operand !) operand)
+    (instruction-optimize-addrmode !)
+    (= *cycles* (instruction-cycles !))))
 
 (defun assemble-assignment (x)
   (add-label .x. (assemble-expression ..x.)))
 
-(defun assemble-string (out x)
-  (adolist ((string-list x))
-    (assemble-byte out (char-code !))))
+(defun assemble-string (x)
+  (string-list x))
 
-(defun assemble-number (out x)
-  (assemble-byte out x))
+(defun assemble-identifier (x)
+  (| (get-label x :required? (not (first-pass?)))
+     0))
 
-(defun assemble-identifier (out x)
-  (assemble-byte out (| (get-label x :required? (not (first-pass?)))
-                        0)))
-
-(defun assemble-toplevel-expression (out x)
+(defun assemble-toplevel-expression (x)
   (awhen (assemble-expression x :ensure? t :not-zero? t)
     (?
       (cons? !)    (? (number? !.)
-                      (adolist !
-                        (assemble-byte out !))
-                      (assemble-parsed-expressions out !))
-      (string? !)  (assemble-string out !)
-      (assemble-byte out !))))
+                      !
+                      (assemble-parsed-expressions !))
+      (string? !)  (assemble-string !)
+      !)))
 
-(defun assemble-fill (out x)
+(defun assemble-fill (x)
   (when (< 1 *pass*)
-    (adotimes ((assemble-expression ..x.))
-      (assemble-byte out 0))))
+    (maptimes [identity 0] (assemble-expression ..x.))))
 
 (defun make-returner ()
   (with (disabled?  *disabled?*
@@ -138,15 +144,17 @@
                           :returner (make-returner))
         *sourceblock-stack*))
 
-(defun assemble-if (out x)
+(defun assemble-if (x)
   (| ..x
      (assembler-error "IF expects a Lisp expression."))
   (push-sourceblock 'if)
-  (= *disabled?* (not (assemble-expression ..x. :ensure? t :not-zero? t))))
+  (= *disabled?* (not (assemble-expression ..x. :ensure? t :not-zero? t)))
+  nil)
 
-(defun assemble-data (out x)
+(defun assemble-data (x)
   (push-sourceblock 'data)
-  (= *data?* t))
+  (= *data?* t)
+  nil)
 
 (defun make-block-returner ()
   (alet (make-returner)
@@ -154,38 +162,38 @@
         (push _ *unassigned-segment-blocks*))
      (funcall ! _)]))
 
-(defun assemble-block (out x)
+(defun assemble-block (x)
   (push (make-sourceblock :name 'block
                           :returner (make-block-returner)
                           :pc-start *pc*)
         *sourceblock-stack*)
-  (= *disabled?* *assign-blocks-to-segments?*))
+  (= *disabled?* *assign-blocks-to-segments?*)
+  nil)
 
-(defun fill-up-remaining-segment (out bytes-left)
+(defun fill-up-remaining-segment (bytes-left)
   (unless (zero? bytes-left)
     (format t "Filling up remaining segment space with ~A zeroes.~%" bytes-left)
-    (adotimes bytes-left
-      (assemble-byte out 0))))
+    (maptimes [identity 0] bytes-left)))
 
-(defun assign-segment-block (out bytes-left b may-be-shorter?)
+(defun assign-segment-block (bytes-left b may-be-shorter?)
   (= *unassigned-segment-blocks* (remove b *unassigned-segment-blocks* :test #'eq))
   (format t "Assigned block of size ~A.~%" (sourceblock-size b))
-  (assemble-parsed-expressions out (butlast (queue-list (sourceblock-exprs b))))
-  (try-to-assign-segment-block out (- bytes-left (sourceblock-size b)) may-be-shorter?))
+  (+ (assemble-parsed-expressions (butlast (queue-list (sourceblock-exprs b))))
+     (try-to-assign-segment-block (- bytes-left (sourceblock-size b)) may-be-shorter?)))
 
-(defun try-to-assign-segment-block (out bytes-left may-be-shorter?)
+(defun try-to-assign-segment-block (bytes-left may-be-shorter?)
   (!? (& (< 9 bytes-left)
          (find-if [<= (sourceblock-size _) bytes-left] *unassigned-segment-blocks*))
-      (assign-segment-block out bytes-left ! may-be-shorter?)
+      (assign-segment-block bytes-left ! may-be-shorter?)
       (? may-be-shorter?
          (format t "Trimmed segment by ~A bytes.~%" bytes-left)
-         (fill-up-remaining-segment out bytes-left))))
+         (fill-up-remaining-segment bytes-left))))
 
-(defun fill-segment (out size may-be-shorter?)
+(defun fill-segment (size may-be-shorter?)
   (& (zero? size)
      (assembler-error "SEGMENT size must be larger than 0."))
   (format t "Filling up segment of size ~a…~%" size)
-  (try-to-assign-segment-block out size may-be-shorter?))
+  (try-to-assign-segment-block size may-be-shorter?))
 
 (defun segment (&key size (may-be-shorter? nil))
   (| (number? size)
@@ -212,30 +220,30 @@
          (assembler-error "Unexpected END of ~A. Expected ~A."
                           name expected)))
     (= (sourceblock-pc-end b) *pc*)
-    (funcall (sourceblock-returner b) b)))
+    (funcall (sourceblock-returner b) b))
+  nil)
 
-(defun assemble-directive (out x)
+(defun assemble-directive (x)
   (case .x.
     'org      (= *pc* (assemble-expression ..x.))
-    'fill     (assemble-fill out x)
-    'if       (assemble-if out x)
-    'data     (assemble-data out x)
-    'block    (assemble-block out x)
+    'fill     (assemble-fill x)
+    'if       (assemble-if x)
+    'data     (assemble-data x)
+    'block    (assemble-block x)
     'end      (assemble-end x)
     (assembler-error "Unsupported directive ~A." x)))
 
-(defun assemble (out x)
+(defun assemble (x)
   (?
-    (string? x)  (assemble-string out x)
-    (number? x)  (assemble-number out x)
+    (string? x)  (assemble-string x)
+    (number? x)  x
     (case x.
-      'label        (add-label .x *pc*)
-      'instruction  (funcall #'assemble-instruction
-                             out .x. ..x. (assemble-expression ...x.))
-      'assignment   (assemble-assignment x)
-      'directive    (assemble-directive out x)
-      'identifier   (assemble-identifier out .x)
-      'expression   (assemble-toplevel-expression out x)
+      'label        x ;(add-label .x *pc*)
+      'instruction  (funcall #'assemble-instruction .x. ..x. (assemble-expression ...x.))
+      'assignment   x ;(assemble-assignment x)
+      'directive    x ;(assemble-directive x)
+      'identifier   x ;(assemble-identifier .x)
+      'expression   x ;(assemble-toplevel-expression x)
       (assembler-error "Unexpected parsed expression ~A." x))))
 
 (defun assemble-dump-line (pc bytes)
@@ -253,49 +261,33 @@
        (princ " " o))
     (princ *assembler-current-line*.. o)))
 
-(defun assemble-and-dump (out x)
-  (= *cycles* nil)
-  (with-string-stream o
-    (let pc *pc*
-      (assemble o x)
-      (let bytes (get-stream-string o)
-        (assemble-dump-line pc bytes)
-        (unless (zero? (length bytes))
-          (princ bytes out))))))
+(defun assemble-parsed-expressions (x)
+  (mapcan [with-temporary *assembler-current-line* _
+            (| *assign-blocks-to-segments?*
+               (let-when b (car *sourceblock-stack*)
+                 (enqueue (sourceblock-exprs b) _)))
+            (@ [? *disabled?*
+                  (? (& (cons? _)
+                        (eq _. 'directive)
+                        (eq ._. 'end))
+                     (assemble-end nil))
+                  (assemble _)]
+               ._)]
+          x))
 
-(defun assemble-parsed-expressions (out x)
-  (adolist x
-    (with-temporary *assembler-current-line* !
-      (| *assign-blocks-to-segments?*
-         (let-when b (car *sourceblock-stack*)
-           (enqueue (sourceblock-exprs b) !)))
-      (adolist (.!)
-        (? *disabled?*
-           (? (& (cons? !)
-                 (eq !. 'directive)
-                 (eq .!. 'end))
-              (assemble-end nil))
-           (assemble-and-dump out !))))))
-
-(defun assemble-pass (out x)
-  (with-temporary *assembler-output-stream* out
-    (= *pc* 0)
-    (= *acycles* 0)
-    (rewind-labels)
-    (assemble-parsed-expressions out x)))
-
-(defun print-dump-header (o)
-  (format o ";~%")
-  (format o "; Pass ~A~%" *pass*)
-  (format o ";~%")
-  (format o "; Adress | Cycles | Accumulated cycles | Bytes | Source~%"))
+(defun assemble-pass (x)
+  (= *pc* 0)
+  (= *acycles* 0)
+  (rewind-labels)
+  (assemble-parsed-expressions x))
 
 (defun assemble-pass-to-file (out-name dump-name i)
   (with-output-file out out-name
     (with-output-file dump dump-name
-      (with-temporary *assembler-dump-stream* dump
+      (with-temporaries (*assembler-output-instructions* (make-queue)
+                         *assembler-dump-stream* dump)
         (print-dump-header dump)
-        (assemble-pass out i)))))
+        (print (assemble-pass i))))))
 
 (defun sort-unassigned-segment-blocks ()
   (= *unassigned-segment-blocks* (sort *unassigned-segment-blocks*

@@ -1,6 +1,7 @@
 ; bender – Copyright (c) 2014 Sven Michael Klose <pixel@copei.de>
 
 (defstruct instruction
+  address
   mnemonic
   addrmode
   (operand nil))
