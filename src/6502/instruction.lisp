@@ -3,7 +3,6 @@
 (defstruct instruction
   mnemonic
   addrmode
-  opcode
   (operand nil))
 
 (defun opcode-aa (x)
@@ -54,8 +53,7 @@
                     (in? mnemonic 'lda 'sta 'sbc)  'absy
                     (in? mnemonic 'ldx 'stx)       'zpx
                     addrmode)
-           addrmode))
-      (= (instruction-opcode instruction) (generate-opcode mnemonic (instruction-addrmode instruction))))))
+           addrmode)))))
 
 (defun generate-opcode (mnemonic addrmode)
   (alet (href *instructions* mnemonic)
@@ -63,3 +61,6 @@
        (? (in? addrmode 'abs 'zp)
           (href ! 'branch))
           (error "Incorrect addressing mode ~A for ~A." addrmode mnemonic))))
+
+(def-instruction instruction-opcode (instruction)
+  (generate-opcode mnemonic addrmode))
