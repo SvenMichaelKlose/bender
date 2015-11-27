@@ -35,7 +35,8 @@
     (eq 'hash x..)
       (progn
         (| (number-or-identifier? .x.)
-           (parser-error "Expression expected instead of ~A." (car .x.)))
+           (parser-error "Expression expected instead of ~A."
+                         (car .x.)))
         (values 'imm .x.))
     (number-or-identifier? x.)
       (? (not .x)
@@ -45,36 +46,38 @@
                (values (case (cdr ..x.)
                        'x  'absx
                        'y  'absy
-                       (parser-error "Index register expected instead of '~A'." (cdr ..x.)))
+                       (parser-error "Index register expected instead of '~A'."
+                                     (cdr ..x.)))
                      x.)
                (parser-error "Index register expected."))
-            (parser-error "Comma expected instead of ~A." (car .x.))))
+            (parser-error "Comma expected instead of ~A."
+                          (car .x.))))
     (bracket-open? x.)
       (progn
         (| (number-or-identifier? .x.)
-           (parser-error "Expression expected instead of ~A." (car .x.)))
+           (parser-error "Expression expected instead of ~A."
+                         (car .x.)))
         (? (bracket-close? ..x.)
            (?
-             (comma? ...x.)
-               (?
-                 (eq 'y (cdr ....x.))  (values 'izpy .x.)
-                 (parser-error "Index register Y expected."))
-             ...x.
-               (parser-error "Comma or end of line expected instead of ~A." (car ...x.))
+             (comma? ...x.)  (? (eq 'y (cdr ....x.))
+                                (values 'izpy .x.)
+                                (parser-error "Index register Y expected."))
+             ...x.           (parser-error "Comma or end of line expected instead of ~A."
+                                           (car ...x.))
              (values 'indi .x.))
            (comma? ..x.)
              (? (identifier? ...x.)
-                (?
-                  (eq 'x (cdr ...x.))
-                    (? (bracket-close? ....x.)
-                       (values 'izpx .x.)
-                       (parser-error "Closing bracket expected instead of ~A." ....x.))
-                  (parser-error "Index register X expected."))
+                (? (eq 'x (cdr ...x.))
+                   (? (bracket-close? ....x.)
+                      (values 'izpx .x.)
+                      (parser-error "Closing bracket expected instead of ~A."
+                                    ....x.))
+                   (parser-error "Index register X expected."))
                 (parser-error "Index register X expected."))
            (parser-error "~A closing bracket."
-                  (? (member-if #'bracket-close? ...x)
-                     "Misplaced"
-                     "Missing"))))
+                         (? (member-if #'bracket-close? ...x)
+                            "Misplaced"
+                            "Missing"))))
     (parser-error "Syntax error at ~A." x.)))
 
 (defun parse-assignment (x)
@@ -85,6 +88,19 @@
 (defun parse-directive (x)
   `((,(car x.) ,(cdr x.) ,@.x)))
 
+(defun parse-atoms (x)
+  (?
+    (& (cons? x)
+       (in? x. 'number 'string))  .x
+    (cons? x)                     (. (parse-atoms x.) (parse-atoms .x))
+    x))
+
+(defun parse-instruction (x)
+  (with ((addrmode operand-expression) (parse-operand .x))
+    (list (make-instruction :mnemonic x..
+                            :addrmode addrmode
+                            :operand-expression operand-expression))))
+
 (defun parse-0 (x)
   (when x
     (?
@@ -93,10 +109,7 @@
       (case x.. :test #'eq
         'label       (. x. (parse-0 .x))
         'directive   (parse-directive x)
-        'mnemonic    (with ((addrmode operand-expression) (parse-operand .x))
-                       (list (make-instruction :mnemonic x..
-                                               :addrmode addrmode
-                                               :operand-expression operand-expression)))
+        'mnemonic    (parse-instruction x)
         (? (identifier? x.)
            (? (assignment? .x.)
               (parse-assignment x)
@@ -105,11 +118,7 @@
 
 (defun parse (x)
   (awhen (parse-labels x)
-    (with (f [? (& (cons? _)
-                   (in? _. 'number 'string)) ._
-                (cons? _)  (. (f _.) (f ._))
-                _])
-      (f (parse-0 !)))))
+    (parse-atoms (parse-0 !))))
 
 (defun parse-stream (i)
   (with-temporary *parser-stream* i
