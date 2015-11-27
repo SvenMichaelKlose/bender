@@ -37,7 +37,7 @@
 (load "src/c/gen-c-emulator.lisp")
 (load "src/c/gen-c-opcode-map.lisp")
 
-;(load "src/tests.lisp")
+(load "src/tests.lisp")
 
 (gen-c-cycle-map "c/cycle-map.c")
 (gen-c-emulator "c/6502-instructions.c")
