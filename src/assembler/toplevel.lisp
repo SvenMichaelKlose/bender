@@ -1,10 +1,5 @@
 ; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
-(defun asm (&rest x)
-  (| (every #'string? x)
-     (assembler-error "ASM expects one or more string."))
-  (mapcan [parse-string (format nil "~A~%" _)] x))
-
 (defun assemble-expression (x &key (ensure? nil) (not-zero? nil))
   (| (& (number? x) x)
      (case x.
@@ -27,15 +22,6 @@
   (& (eq (instruction-mnemonic instruction) 'jmp)
      (<= -128 (- operand *pc* 1) 127)
      (assembler-hint "JMP is short enough for a branch.")))
-
-(def-instruction instruction-write-operand (inst out)
-  (dotimes (i (instruction-operand-size inst))
-    (write-byte (mod operand 256) out)
-    (= operand (>> operand 8))))
-
-(def-instruction instruction-write (instruction out)
-  (write-byte (instruction-opcode instruction) out)
-  (instruction-write-operand instruction out))
 
 (defun assemble-instruction (instruction)
   (= (instruction-address instruction) *pc*)
