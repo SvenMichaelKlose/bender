@@ -15,6 +15,20 @@
 (def-head-predicate bracket-open)
 (def-head-predicate bracket-close)
 (def-head-predicate assignment)
+(def-head-predicate expression)
+
+(defun parse-assignment (x)
+  (| (assignment? .x.)
+     (parser-error "Assignment '=' expected instead of ~A." .x))
+  `((assignment ,(cdr x.) ,..x.)))
+
+(defun parse-identifier (x)
+  (? (assignment? .x.)
+     (parse-assignment x)
+     (. x. (parse-0 .x))))
+
+(defun parse-directive (x)
+  `((,(car x.) ,(cdr x.) ,@.x)))
 
 (defun parse-labels (x)
   (& x
@@ -26,68 +40,64 @@
 
 (defun operand-expression? (x)
   (| (number? x)
-     (in? x. 'identifier 'expression)))
+     (identifier? x)
+     (expression? x)))
+
+(defun parse-operand-immediate (x)
+  (| (operand-expression? .x.)
+     (parser-error "Expression expected instead of ~A."
+                   (car .x.)))
+  (values 'imm .x.))
+
+(defun parse-operand-absolute (x)
+  (? (not .x)
+     (values 'abs x.)
+     (? (comma? .x.)
+        (? (identifier? ..x.)
+           (values (case (cdr ..x.)
+                     'x  'absx
+                     'y  'absy
+                     (parser-error "Index register expected instead of '~A'."
+                                   (cdr ..x.)))
+                   x.)
+           (parser-error "Index register expected."))
+        (parser-error "Comma expected instead of ~A."
+                      (car .x.)))))
+
+(defun parse-operand-indirect (x)
+  (| (operand-expression? .x.)
+     (parser-error "Expression expected instead of ~A."
+                   (car .x.)))
+  (? (bracket-close? ..x.)
+     (?
+       (comma? ...x.)  (? (eq 'y (cdr ....x.))
+                          (values 'izpy .x.)
+                          (parser-error "Index register Y expected."))
+       ...x.           (parser-error "Comma or end of line expected instead of ~A."
+                                     (car ...x.))
+       (values 'indi .x.))
+     (comma? ..x.)
+       (? (identifier? ...x.)
+          (? (eq 'x (cdr ...x.))
+             (? (bracket-close? ....x.)
+                (values 'izpx .x.)
+                (parser-error "Closing bracket expected instead of ~A."
+                              ....x.))
+             (parser-error "Index register X expected."))
+          (parser-error "Index register X expected."))
+     (parser-error "~A closing bracket."
+                   (? (member-if #'bracket-close? ...x)
+                      "Misplaced"
+                      "Missing"))))
 
 (defun parse-operand (x)
   (?
-    (not x)
-      (values 'accu nil)
+    (not x)             (values 'accu nil)
     (& (cons? x.)
-       (eq 'hash x..))
-      (progn
-        (| (operand-expression? .x.)
-           (parser-error "Expression expected instead of ~A."
-                         (car .x.)))
-        (values 'imm .x.))
-    (operand-expression? x.)
-      (? (not .x)
-         (values 'abs x.)
-         (? (comma? .x.)
-            (? (identifier? ..x.)
-               (values (case (cdr ..x.)
-                       'x  'absx
-                       'y  'absy
-                       (parser-error "Index register expected instead of '~A'."
-                                     (cdr ..x.)))
-                     x.)
-               (parser-error "Index register expected."))
-            (parser-error "Comma expected instead of ~A."
-                          (car .x.))))
-    (bracket-open? x.)
-      (progn
-        (| (operand-expression? .x.)
-           (parser-error "Expression expected instead of ~A."
-                         (car .x.)))
-        (? (bracket-close? ..x.)
-           (?
-             (comma? ...x.)  (? (eq 'y (cdr ....x.))
-                                (values 'izpy .x.)
-                                (parser-error "Index register Y expected."))
-             ...x.           (parser-error "Comma or end of line expected instead of ~A."
-                                           (car ...x.))
-             (values 'indi .x.))
-           (comma? ..x.)
-             (? (identifier? ...x.)
-                (? (eq 'x (cdr ...x.))
-                   (? (bracket-close? ....x.)
-                      (values 'izpx .x.)
-                      (parser-error "Closing bracket expected instead of ~A."
-                                    ....x.))
-                   (parser-error "Index register X expected."))
-                (parser-error "Index register X expected."))
-           (parser-error "~A closing bracket."
-                         (? (member-if #'bracket-close? ...x)
-                            "Misplaced"
-                            "Missing"))))
+       (eq 'hash x..))       (parse-operand-immediate x)
+    (operand-expression? x.) (parse-operand-absolute x)
+    (bracket-open? x.)       (parse-operand-indirect x)
     (parser-error "Syntax error at ~A." x.)))
-
-(defun parse-assignment (x)
-  (| (assignment? .x.)
-     (parser-error "Assignment '=' expected instead of ~A." .x))
-  `((assignment ,(cdr x.) ,..x.)))
-
-(defun parse-directive (x)
-  `((,(car x.) ,(cdr x.) ,@.x)))
 
 (defun parse-instruction (x)
   (with ((addrmode operand-expression) (parse-operand .x))
@@ -106,11 +116,8 @@
         'label       (. x. (parse-0 .x))
         'directive   (parse-directive x)
         'mnemonic    (parse-instruction x)
-        (? (identifier? x.)
-           (? (assignment? .x.)
-              (parse-assignment x)
-              (. x. (parse-0 .x)))
-           (parser-error "Unexpected token ~A." x.))))))
+        'identifier  (parse-identifier x)
+        (parser-error "Unexpected token ~A." x.)))))
 
 (defun parse (x)
   (parse-0 (parse-labels x)))
