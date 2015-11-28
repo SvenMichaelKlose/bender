@@ -1,5 +1,9 @@
 ; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
+(defun assemble-org (x)
+  (= *pc* (assemble-expression ..x.))
+  nil)
+
 (defun assemble-fill (x)
   (when (< 1 *pass*)
     (alet (assemble-expression ..x.)
@@ -64,7 +68,7 @@
 
 (defun assemble-directive (x)
   (case .x.
-    'org    (= *pc* (assemble-expression ..x.))
+    'org    (assemble-org x)
     'fill   (assemble-fill x)
     'if     (assemble-if x)
     'data   (assemble-data x)
