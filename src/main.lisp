@@ -25,6 +25,7 @@
 (load "src/assembler/segment.lisp")
 (load "src/assembler/directives.lisp")
 (load "src/assembler/dump.lisp")
+(load "src/assembler/write.lisp")
 (load "src/assembler/toplevel.lisp")
 
 (load "src/tap/bin2cbmtap.lisp")

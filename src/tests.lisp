@@ -22,15 +22,14 @@
          result    (+ "obj/" name ".bin")
          reference (+ "tests/" name ".bin"))
     (assemble-files result source)
-    ;(test-compare-files result reference)))
-    ))
+    (test-compare-files result reference)))
 
 (test-opcode-instruction-symmetry)
 
 (disassemble-file "tests/all_instructions.bin" "obj/all_instructions_diassembled.lst")
 
 (do-bender-test "all_instructions")
-(do-bender-test "inline-lisp")
+;(do-bender-test "inline-lisp")
 (do-bender-test "if")
 
 (defun test-tap ()
@@ -42,7 +41,7 @@
   (test-compare-files "obj/test.tap"
                       "tests/test.tap"))
 
-;(test-tap)
+(test-tap)
 
 (with-temporary *model* :vic-20
   (assemble-files "obj/cbm-basic-init.prg"

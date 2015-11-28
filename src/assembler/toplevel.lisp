@@ -34,6 +34,8 @@
 
 (def-instruction assemble-instruction (instruction)
   (= (instruction-address instruction) *pc*)
+  (& (branch-instruction? mnemonic)
+     (= (instruction-addrmode instruction) 'branch))
   (= (instruction-operand instruction) (assemble-operand instruction (assemble-expression operand-expression)))
   (instruction-optimize-addrmode instruction)
   instruction)
@@ -122,9 +124,9 @@
         (assembler-error "Block(s) with no END: ~A" !))))
 
 (defun assemble-parsed-files (x)
-  (assemble-multiple-passes x)
-  (unless *unassigned-segment-blocks*
-    (return x))
+  (alet (assemble-multiple-passes x)
+    (unless *unassigned-segment-blocks*
+      (return !)))
   (format t "Assembling again to assign BLOCKs to SEGMENTS…~%")
   (sort-unassigned-segment-blocks)
   (with-temporary *assign-blocks-to-segments?* t
@@ -135,7 +137,9 @@
   (with-temporary *unassigned-segment-blocks* nil
     (let dump-name (+ out-name ".lst")
       (format t "Assembling to '~A'. Dump file is '~A'…~%" out-name dump-name)
-      (assemble-parsed-files (parse-files in-names)))
-    (check-on-unassigned-blocks)
-    (rewind-labels))
+      (with-output-file out out-name
+        (write-assembled-expressions (prog1 (assemble-parsed-files (parse-files in-names))
+                                       (check-on-unassigned-blocks)
+                                       (rewind-labels))
+                                     out))))
   nil)

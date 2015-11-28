@@ -1,6 +1,5 @@
 ; Bender – Copyright (c) 2014 Sven Michael Klose <pixel@copei.de>
 
-0 0 0 0
 l1:bcc l1
 bcs l1
 beq l1
