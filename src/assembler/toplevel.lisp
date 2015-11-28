@@ -66,6 +66,7 @@
 
 (defun assemble (x)
   (?
+    (not x)           x
     (string? x)       (assemble-string x)
     (number? x)       x
     (instruction? x)  (assemble-instruction x)
