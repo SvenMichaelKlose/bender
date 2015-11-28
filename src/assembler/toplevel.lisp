@@ -66,11 +66,11 @@
             (number? x)       x
             (instruction? x)  (assemble-instruction x)
             (case x.
-              'label        (assemble-label x)
-              'assignment   (assemble-assignment x)
-              'directive    (assemble-directive x)
-              'identifier   (assemble-identifier x)
-              'expression   (assemble-toplevel-expression x)
+              'label       (assemble-label x)
+              'assignment  (assemble-assignment x)
+              'directive   (assemble-directive x)
+              'identifier  (assemble-identifier x)
+              'expression  (assemble-toplevel-expression x)
               (assembler-error "Unexpected parsed expression ~A." x)))
     (= *pc* (update-pc ! *pc*))))
 
@@ -102,8 +102,8 @@
   (aprog1 (assemble-parsed-expressions x)
     (++! *pass*)))
 
-(defun assemble-multiple-passes (out-name dump-name x &key (unassigned-segment-blocks nil)
-                                                           (segments (make-queue)))
+(defun assemble-multiple-passes (x &key (unassigned-segment-blocks nil)
+                                        (segments (make-queue)))
   (clear-labels)
   (= *pass* 0)
   (prog1 (while (| *label-changed?*
@@ -115,22 +115,21 @@
     (!? *sourceblock-stack*
         (assembler-error "Block(s) with no END: ~A" !))))
 
-(defun assemble-parsed-files (out-name dump-name x)
-  (= x (assemble-multiple-passes out-name dump-name x))
+(defun assemble-parsed-files (x)
+  (= x (assemble-multiple-passes x))
   (unless *unassigned-segment-blocks*
     (return x))
   (format t "Assembling again to assign BLOCKs to SEGMENTS…~%")
   (sort-unassigned-segment-blocks)
   (with-temporary *assign-blocks-to-segments?* t
-    (assemble-multiple-passes out-name dump-name x
-                              :unassigned-segment-blocks *unassigned-segment-blocks*
-                              :segments *segments*)))
+    (assemble-multiple-passes x :unassigned-segment-blocks *unassigned-segment-blocks*
+                                :segments *segments*)))
 
 (defun assemble-files (out-name &rest in-names)
   (with-temporary *unassigned-segment-blocks* nil
     (let dump-name (+ out-name ".lst")
       (format t "Assembling to '~A'. Dump file is '~A'…~%" out-name dump-name)
-      (print (assemble-parsed-files out-name dump-name (parse-files in-names))))
+      (print (assemble-parsed-files (parse-files in-names))))
     (check-on-unassigned-blocks)
     (rewind-labels))
   nil)
