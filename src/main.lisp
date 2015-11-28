@@ -20,6 +20,7 @@
 (load "src/assembler/tokenizer.lisp")
 (load "src/assembler/parser.lisp")
 (load "src/assembler/labels-to-exprs.lisp")
+(load "src/assembler/assemble.lisp")
 (load "src/assembler/helpers.lisp")
 (load "src/assembler/vice.lisp")
 (load "src/assembler/segment.lisp")
