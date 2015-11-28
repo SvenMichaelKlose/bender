@@ -33,13 +33,16 @@
 (do-bender-test "inline-lisp")
 (do-bender-test "if")
 
-(with-output-file o "obj/test.tap"
-  (write-tap o
-    (bin2cbmtap (string-list (fetch-file "obj/all_instructions.bin"))
-                "ALL INSTRUCTIONS"
-                :start #x1001)))
-(test-compare-files "obj/test.tap"
-                    "tests/test.tap")
+(defun test-tap ()
+  (with-output-file o "obj/test.tap"
+    (write-tap o
+      (bin2cbmtap (string-list (fetch-file "obj/all_instructions.bin"))
+                  "ALL INSTRUCTIONS"
+                  :start #x1001)))
+  (test-compare-files "obj/test.tap"
+                      "tests/test.tap"))
+
+;(test-tap)
 
 (with-temporary *model* :vic-20
   (assemble-files "obj/cbm-basic-init.prg"
