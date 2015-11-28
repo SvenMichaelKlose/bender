@@ -36,11 +36,9 @@
   nil)
 
 (defun fill-up-remaining-segment (bytes-left)
-  (terpri)
-  (unless (zero? bytes-left)
-    (format t "Filling up remaining segment space with ~A zeroes.~%" bytes-left)
-    (list (. *assembler-current-line*.
-             (maptimes [identity 0] bytes-left)))))
+  (format t "~LFilling up remaining segment space with ~A zeroes.~%" bytes-left)
+  (list (. *assembler-current-line*.
+           (maptimes [identity 0] bytes-left))))
 
 (defun assign-segment-block (bytes-left b may-be-shorter?)
   (= *unassigned-segment-blocks* (remove b *unassigned-segment-blocks* :test #'eq))
@@ -63,7 +61,8 @@
   (& (zero? size)
      (assembler-error "SEGMENT size must be larger than 0."))
   (format t "Filling up segment of size ~a…" size)
-  (try-to-assign-segment-block size may-be-shorter?))
+  (prog1 (try-to-assign-segment-block size may-be-shorter?)
+    (fresh-line)))
 
 (defun segment (&key size (may-be-shorter? nil))
   (| (number? size)
