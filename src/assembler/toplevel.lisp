@@ -104,8 +104,8 @@
              (assemble ._)))]
      x))
 
-(defun assemble-pass (x &key unassigned-segment-blocks segments)
-  (format t "Pass ~A…~%" *pass*)
+(defun assemble-pass (x &key unassigned-segment-blocks segments description)
+  (format t "Pass ~A~A…~%" *pass* description)
   (= *label-changed?* nil
      *unassigned-segment-blocks* unassigned-segment-blocks
      *segments* segments
@@ -116,15 +116,18 @@
     (++! *pass*)))
 
 (defun assemble-multiple-passes (x &key (unassigned-segment-blocks nil)
-                                        (segments (make-queue)))
+                                        (segments (make-queue))
+                                        (description ""))
   (clear-labels)
   (= *pass* 0)
   (prog1 (while (| *label-changed?*
                    (< *pass* 4))
                 (assemble-pass x :unassigned-segment-blocks unassigned-segment-blocks
-                                 :segments segments)
+                                 :segments segments
+                                 :description description)
            (assemble-pass x :unassigned-segment-blocks unassigned-segment-blocks
-                            :segments segments))
+                            :segments segments
+                            :description description))
     (!? *sourceblock-stack*
         (assembler-error "Block(s) with no END: ~A" !))))
 
@@ -136,7 +139,8 @@
   (sort-unassigned-segment-blocks)
   (with-temporary *assign-blocks-to-segments?* t
     (assemble-multiple-passes x :unassigned-segment-blocks *unassigned-segment-blocks*
-                                :segments *segments*)))
+                                :segments *segments*
+                                :description " (assigning BLOCKs to SEGMENTs)")))
 
 (defun assemble-files (out-name &rest in-names)
   (with-temporary *unassigned-segment-blocks* nil
