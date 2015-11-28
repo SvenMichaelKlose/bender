@@ -11,7 +11,6 @@
   (write-instruction-operand instruction out))
 
 (defun write-assembled-expression (x out)
-  (print x)
   (?
     (string? x)       (princ x out)
     (number? x)       (write-byte x out)
