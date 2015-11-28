@@ -110,7 +110,7 @@
 
 (defun parse-instruction (x)
   (with ((addrmode operand-expression) (parse-operand .x))
-    (list (make-instruction :mnemonic x..
+    (list (make-instruction :mnemonic (cdr x.)
                             :addrmode addrmode
                             :operand-expression operand-expression))))
 
