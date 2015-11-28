@@ -43,7 +43,8 @@
 (defun assign-segment-block (bytes-left b may-be-shorter?)
   (= *unassigned-segment-blocks* (remove b *unassigned-segment-blocks* :test #'eq))
   (format t " ~A~F" (sourceblock-size b))
-  (+ (assemble-parsed-expressions (butlast (queue-list (sourceblock-exprs b))))
+  (+ (list (. *assembler-current-line*.
+              (. 'expression (butlast (queue-list (sourceblock-exprs b))))))
      (try-to-assign-segment-block (- bytes-left (sourceblock-size b)) may-be-shorter?)))
 
 (defun find-largest-fitting-block (bytes-left)
