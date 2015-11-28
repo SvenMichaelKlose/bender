@@ -139,10 +139,11 @@
              (queue-list q)
         (with (ci       (make-copying-stream :in i)
                file-id  (stream-location-id (stream-input-location i))
-               line-nr  (stream-location-line (stream-input-location i)))
+               line-nr  (stream-location-line (stream-input-location i))
+               parsed   (parse (remove-if #'not (tokenize-line ci))))
           (enqueue q (. (. (copying-stream-recorded-in ci)
                            (. file-id line-nr))
-                        (parse (remove-if #'not (tokenize-line ci))))))))))
+                        parsed)))))))
 
 (defun parse-string (source)
   (with-stream-string in source (parse-stream in)))
