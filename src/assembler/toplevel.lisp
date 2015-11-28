@@ -123,7 +123,7 @@
         (assembler-error "Block(s) with no END: ~A" !))))
 
 (defun assemble-parsed-files (x)
-  (= x (assemble-multiple-passes x))
+  (assemble-multiple-passes x)
   (unless *unassigned-segment-blocks*
     (return x))
   (format t "Assembling again to assign BLOCKs to SEGMENTS…~%")
