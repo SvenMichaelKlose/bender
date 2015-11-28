@@ -68,12 +68,15 @@
        (instruction? x)  (instruction-size x)
        0)))
 
+(defun catch-end (x)
+  (& (cons? x)
+     (eq x. 'directive)
+     (eq .x. 'end)
+     (assemble-end nil)))
+
 (defun assemble (x)
   (? *disabled?*
-     (& (cons? x)
-        (eq x. 'directive)
-        (eq .x. 'end)
-        (assemble-end nil))
+     (catch-end x)
      (aprog1 (?
                (not x)           x
                (string? x)       x
@@ -86,7 +89,9 @@
                  'identifier  (assemble-identifier x)
                  'expression  (assemble-toplevel-expression x)
                  (assembler-error "Unexpected parsed expression ~A." x)))
-       (= *pc* (update-pc ! *pc*)))))
+       (= *pc* (update-pc ! *pc*))
+       (& *data?*
+          (return)))))
 
 (defun assemble-parsed-expressions (x)
   (@ [with-temporary *assembler-current-line* _
