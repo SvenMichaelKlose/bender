@@ -64,7 +64,7 @@
   (| (number? size)
      (assembler-error "SEGMENT expects a size."))
   (? *assign-blocks-to-segments?*
-     (fill-segment *assembler-output-stream* size may-be-shorter?)
+     (fill-segment size may-be-shorter?)
      (enqueue *segments* (make-segment :size size
                                        :may-be-shorter? may-be-shorter?)))
   nil)

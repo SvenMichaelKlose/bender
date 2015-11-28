@@ -15,10 +15,6 @@
      (unless not-zero?
        0)))
 
-(defun assemble-byte (x)
-  (unless *data?*
-    x))
-
 (def-instruction assemble-operand (instruction operand)
   (when (character? operand)
     (= operand (char-code operand)))
@@ -48,9 +44,6 @@
 (defun assemble-assignment (x)
   (add-label .x. (assemble-expression ..x.)))
 
-(defun assemble-string (x)
-  (string-list x))
-
 (defun assemble-identifier (x)
   (| (get-label x :required? (not (first-pass?)))
      0))
@@ -61,21 +54,20 @@
       (cons? !)    (? (number? !.)
                       !
                       (assemble-parsed-expressions !))
-      (string? !)  (assemble-string !)
       !)))
 
 (defun assemble (x)
   (?
     (not x)           x
-    (string? x)       (assemble-string x)
+    (string? x)       x
     (number? x)       x
     (instruction? x)  (assemble-instruction x)
     (case x.
-      'label        x ;(add-label .x *pc*)
-      'assignment   x ;(assemble-assignment x)
-      'directive    x ;(assemble-directive x)
-      'identifier   x ;(assemble-identifier .x)
-      'expression   x ;(assemble-toplevel-expression x)
+      'label        (add-label .x *pc*)
+      'assignment   (assemble-assignment x)
+      'directive    (assemble-directive x)
+      'identifier   (assemble-identifier .x)
+      'expression   (assemble-toplevel-expression x)
       (assembler-error "Unexpected parsed expression ~A." x))))
 
 (defun assemble-parsed-expressions (x)
