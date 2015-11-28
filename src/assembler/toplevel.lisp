@@ -82,7 +82,7 @@
   (print x)
   (mapcan [with-temporary *assembler-current-line* _
             (| *assign-blocks-to-segments?*
-               (let-when b (car *sourceblock-stack*)
+               (let-when b *sourceblock-stack*.
                  (enqueue (sourceblock-exprs b) _)))
             (? (cons? ._)
                (@ [? *disabled?*
