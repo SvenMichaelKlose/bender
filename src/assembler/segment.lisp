@@ -39,7 +39,8 @@
   (terpri)
   (unless (zero? bytes-left)
     (format t "Filling up remaining segment space with ~A zeroes.~%" bytes-left)
-    (maptimes [identity 0] bytes-left)))
+    (list (. *assembler-current-line*.
+             (maptimes [identity 0] bytes-left)))))
 
 (defun assign-segment-block (bytes-left b may-be-shorter?)
   (= *unassigned-segment-blocks* (remove b *unassigned-segment-blocks* :test #'eq))
@@ -66,9 +67,10 @@
      (assembler-error "SEGMENT expects a size."))
   (? *assign-blocks-to-segments?*
      (fill-segment size may-be-shorter?)
-     (enqueue *segments* (make-segment :size size
-                                       :may-be-shorter? may-be-shorter?)))
-  nil)
+     (progn
+       (enqueue *segments* (make-segment :size size
+                                         :may-be-shorter? may-be-shorter?))
+       nil)))
 
 (defun sort-unassigned-segment-blocks ()
   (= *unassigned-segment-blocks* (sort *unassigned-segment-blocks*
