@@ -2,9 +2,10 @@
 
 (defun assemble-fill (x)
   (when (< 1 *pass*)
-    (& (< x 0)
-       (assembler-error "Cannot fill minus ~A bytes," (abs x)))
-    (maptimes [identity 0] (assemble-expression ..x.))))
+    (alet (assemble-expression ..x.)
+      (& (< ! 0)
+         (assembler-error "Cannot fill minus ~A bytes," (abs !)))
+      (maptimes [identity 0] !))))
 
 (defun make-returner ()
   (with (disabled?  *disabled?*
