@@ -1,7 +1,9 @@
 ; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
 (defun assemble-expression (x &key (ensure? nil) (not-zero? nil))
-  (| (& (number? x) x)
+  (| (? (| (number? x)
+           (string? x))
+        x)
      (case x.
        'expression  (unless (& (not ensure?)
                                (first-pass?))
@@ -10,9 +12,15 @@
      (unless not-zero?
        0)))
 
+(defun convert-operand (x)
+  (?
+    (character? x) (char-code x)
+    (string? x)    (? (< 1 (length x))
+                      (assembler-error "Operand strings must contain one character.")
+                      (char-code (elt x 0)))
+    x))
+
 (def-instruction assemble-operand (instruction x)
-  (when (character? x)
-    (= operand (char-code x)))
   (when (eq 'branch addrmode)
     (= x (- x *pc* 1))
     (& (< 2 *pass*)
@@ -27,7 +35,7 @@
 (defun assemble-instruction (instruction)
   (= (instruction-address instruction) *pc*)
   (= (instruction-operand instruction)
-     (assemble-expression (instruction-operand-expression instruction)))
+     (assemble-operand instruction (assemble-expression (instruction-operand-expression instruction))))
   (instruction-optimize-addrmode instruction)
   instruction)
 
