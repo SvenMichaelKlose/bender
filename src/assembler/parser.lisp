@@ -3,10 +3,11 @@
 (defvar *parser-stream* nil)
 
 (defun parser-error (x &rest fmt)
-  (error "~LError while parsing '~A', line ~A: ~A"
-         (stream-location-id (stream-input-location *parser-stream*))
-         (stream-location-line (stream-input-location *parser-stream*))
-         (apply #'format nil x fmt)))
+  (alet (stream-input-location *parser-stream*)
+    (error "~LError while parsing '~A', line ~A: ~A"
+           (stream-location-id !)
+           (stream-location-line !)
+           (apply #'format nil x fmt))))
 
 (def-head-predicate identifier)
 (def-head-predicate colon)
@@ -103,9 +104,9 @@
   (?
     (not x)             (values 'accu nil)
     (& (cons? x.)
-       (eq 'hash x..))       (parse-operand-immediate x)
-    (operand-expression? x.) (parse-operand-absolute x)
-    (bracket-open? x.)       (parse-operand-indirect x)
+       (eq 'hash x..))        (parse-operand-immediate x)
+    (operand-expression? x.)  (parse-operand-absolute x)
+    (bracket-open? x.)        (parse-operand-indirect x)
     (parser-error "Syntax error at ~A." x.)))
 
 (defun parse-instruction (x)
