@@ -12,11 +12,16 @@
 
 (defun write-assembled-expression (x out)
   (?
-    (string? x)       (princ x out)
-    (number? x)       (write-byte x out)
+    (string? x)         (princ x out)
+    (number? x)         (write-byte x out)
     (& (cons? x)
-       (number? x.))  (adolist x (write-byte ! out))
-    (instruction? x)  (write-instruction x out)))
+       (number? x.))    (adolist x (write-byte ! out))
+    (instruction? x)    (write-instruction x out)
+    (| (not x)
+       (label? x)
+       (assignment? x)
+       (directive? x))  nil
+    (write-assembled-expressions x out)))
 
 (defun write-assembled-expressions (x out)
   (adolist x
