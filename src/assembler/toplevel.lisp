@@ -67,19 +67,24 @@
        0)))
 
 (defun assemble (x)
-  (aprog1 (?
-            (not x)           x
-            (string? x)       x
-            (number? x)       x
-            (instruction? x)  (assemble-instruction x)
-            (case x.
-              'label       (assemble-label x)
-              'assignment  (assemble-assignment x)
-              'directive   (assemble-directive x)
-              'identifier  (assemble-identifier x)
-              'expression  (assemble-toplevel-expression x)
-              (assembler-error "Unexpected parsed expression ~A." x)))
-    (= *pc* (update-pc ! *pc*))))
+  (? *disabled?*
+     (& (cons? x)
+        (eq x. 'directive)
+        (eq .x. 'end)
+        (assemble-end nil))
+     (aprog1 (?
+               (not x)           x
+               (string? x)       x
+               (number? x)       x
+               (instruction? x)  (assemble-instruction x)
+               (case x.
+                 'label       (assemble-label x)
+                 'assignment  (assemble-assignment x)
+                 'directive   (assemble-directive x)
+                 'identifier  (assemble-identifier x)
+                 'expression  (assemble-toplevel-expression x)
+                 (assembler-error "Unexpected parsed expression ~A." x)))
+       (= *pc* (update-pc ! *pc*)))))
 
 (defun assemble-parsed-expressions (x)
   (@ [with-temporary *assembler-current-line* _
@@ -88,13 +93,7 @@
             (enqueue (sourceblock-exprs b) _)))
        (. _.
           (? (cons? ._)
-             (@ [? *disabled?*
-                   (? (& (cons? _)
-                         (eq _. 'directive)
-                         (eq ._. 'end))
-                      (assemble-end nil))
-                   (assemble _)]
-                ._)
+             (@ #'assemble ._)
              (assemble ._)))]
      x))
 
@@ -136,7 +135,7 @@
   (with-temporary *unassigned-segment-blocks* nil
     (let dump-name (+ out-name ".lst")
       (format t "Assembling to '~A'. Dump file is '~A'…~%" out-name dump-name)
-      (print (assemble-parsed-files (parse-files in-names))))
+      (assemble-parsed-files (parse-files in-names)))
     (check-on-unassigned-blocks)
     (rewind-labels))
   nil)
