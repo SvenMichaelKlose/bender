@@ -2,6 +2,8 @@
 
 (defun assemble-fill (x)
   (when (< 1 *pass*)
+    (& (< x 0)
+       (assembler-error "Cannot fill minus ~A bytes," (abs x)))
     (maptimes [identity 0] (assemble-expression ..x.))))
 
 (defun make-returner ()
