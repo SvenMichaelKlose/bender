@@ -6,9 +6,6 @@
   (format o ";~%")
   (format o "; Adress | Cycles | Accumulated cycles | Bytes | Source~%"))
 
-(defun first-pass? ()
-  (< *pass* 1))
-
 (defun assemble-dump-line (pc bytes)
   (let o *assembler-dump-stream*
     (fresh-line o)
