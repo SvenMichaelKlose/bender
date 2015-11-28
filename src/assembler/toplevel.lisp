@@ -102,8 +102,8 @@
   (aprog1 (assemble-parsed-expressions x)
     (++! *pass*)))
 
-(defun assemble-parsed-files-0 (out-name dump-name x &key (unassigned-segment-blocks nil)
-                                                          (segments (make-queue)))
+(defun assemble-multiple-passes (out-name dump-name x &key (unassigned-segment-blocks nil)
+                                                           (segments (make-queue)))
   (clear-labels)
   (= *pass* 0)
   (prog1 (while (| *label-changed?*
@@ -116,15 +116,15 @@
         (assembler-error "Block(s) with no END: ~A" !))))
 
 (defun assemble-parsed-files (out-name dump-name x)
-  (= x (assemble-parsed-files-0 out-name dump-name x))
+  (= x (assemble-multiple-passes out-name dump-name x))
   (unless *unassigned-segment-blocks*
     (return x))
   (format t "Assembling again to assign BLOCKs to SEGMENTS…~%")
   (sort-unassigned-segment-blocks)
   (with-temporary *assign-blocks-to-segments?* t
-    (assemble-parsed-files-0 out-name dump-name x
-                             :unassigned-segment-blocks *unassigned-segment-blocks*
-                             :segments *segments*)))
+    (assemble-multiple-passes out-name dump-name x
+                              :unassigned-segment-blocks *unassigned-segment-blocks*
+                              :segments *segments*)))
 
 (defun assemble-files (out-name &rest in-names)
   (with-temporary *unassigned-segment-blocks* nil
