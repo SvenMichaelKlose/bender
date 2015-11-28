@@ -64,31 +64,40 @@
         (parser-error "Comma expected instead of ~A."
                       (car .x.)))))
 
+(defun parse-operand-indexed-indirect (x)
+  (?
+    (comma? ...x.)  (? (eq 'y (cdr ....x.))
+                       (values 'izpy .x.)
+                       (parser-error "Index register Y expected."))
+    (parser-error "Comma or end of line expected instead of ~A."
+                  (car ...x.))))
+
+(defun parse-operand-indirect-indexed (x)
+  (? (identifier? ...x.)
+     (? (eq 'x (cdr ...x.))
+        (? (bracket-close? ....x.)
+           (values 'izpx .x.)
+           (parser-error "Closing bracket expected instead of ~A."
+                         ....x.))
+        (parser-error "Index register X expected."))
+     (parser-error "Index register X expected.")))
+
 (defun parse-operand-indirect (x)
   (| (operand-expression? .x.)
      (parser-error "Expression expected instead of ~A."
                    (car .x.)))
-  (? (bracket-close? ..x.)
-     (?
-       (comma? ...x.)  (? (eq 'y (cdr ....x.))
-                          (values 'izpy .x.)
-                          (parser-error "Index register Y expected."))
-       ...x.           (parser-error "Comma or end of line expected instead of ~A."
-                                     (car ...x.))
-       (values 'indi .x.))
-     (comma? ..x.)
-       (? (identifier? ...x.)
-          (? (eq 'x (cdr ...x.))
-             (? (bracket-close? ....x.)
-                (values 'izpx .x.)
-                (parser-error "Closing bracket expected instead of ~A."
-                              ....x.))
-             (parser-error "Index register X expected."))
-          (parser-error "Index register X expected."))
-     (parser-error "~A closing bracket."
-                   (? (member-if #'bracket-close? ...x)
-                      "Misplaced"
-                      "Missing"))))
+  (?
+    (bracket-close? ..x.)
+      (? (not ...x)
+         (values 'indi .x.)
+         (parse-operand-indexed-indirect x))
+
+    (comma? ..x.)
+      (parse-operand-indirect-indexed x)
+   (parser-error "~A closing bracket."
+                 (? (member-if #'bracket-close? ...x)
+                    "Misplaced"
+                    "Missing"))))
 
 (defun parse-operand (x)
   (?
