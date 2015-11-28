@@ -48,13 +48,16 @@
   (+ (assemble-parsed-expressions (butlast (queue-list (sourceblock-exprs b))))
      (try-to-assign-segment-block (- bytes-left (sourceblock-size b)) may-be-shorter?)))
 
+(defun find-largest-fitting-block (bytes-left)
+  (find-if [<= (sourceblock-size _) bytes-left] *unassigned-segment-blocks*))
+
 (defun try-to-assign-segment-block (bytes-left may-be-shorter?)
-  (!? (& (< 9 bytes-left)
-         (find-if [<= (sourceblock-size _) bytes-left] *unassigned-segment-blocks*))
-      (assign-segment-block bytes-left ! may-be-shorter?)
-      (? may-be-shorter?
-         (format t "~LTrimmed segment by ~A bytes.~%" bytes-left)
-         (fill-up-remaining-segment bytes-left))))
+  (unless (zero? bytes-left)
+    (!? (find-largest-fitting-block bytes-left)
+        (assign-segment-block bytes-left ! may-be-shorter?)
+        (? may-be-shorter?
+           (format t "~LTrimmed segment by ~A bytes.~%" bytes-left)
+           (fill-up-remaining-segment bytes-left)))))
 
 (defun fill-segment (size may-be-shorter?)
   (& (zero? size)
