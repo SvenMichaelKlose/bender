@@ -29,7 +29,7 @@
      (update-label x addr)))
 
 (defun get-label-in (ltab x direction required?)
-  (| (cdr (assoc x ltab))
+  (| (cdr (assoc x ltab :test #'eq))
      (when required?
        (assembler-error "No ~A label '~A'." direction x))))
 
@@ -39,13 +39,17 @@
 (defun get-next-label (x &key (required? t))
   (get-label-in *next-labels* x "next" required?))
 
+(defun has-label? (x)
+  (| (cdr (assoc x *previous-labels* :test #'eq))
+     (cdr (assoc x *next-labels* :test #'eq))))
+
 (defun get-label-undirected (x &key (required? t))
   (with (prev  (get-previous-label x :required? nil)
          next  (get-next-label x :required? nil))
     (& required? prev next
        (assembler-error "Label ~A appears in previous and later code. Please specify a direction." x))
     (| prev next
-       (cdr (assoc x *imported-labels*))
+       (cdr (assoc x *imported-labels* :test #'eq))
        (& required?
           (assembler-error "Label ~A is not defined." x)))))
 
