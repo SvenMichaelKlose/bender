@@ -48,4 +48,5 @@
                   "vic-20/basic-loader.asm"
                   "growroom/cbm-basic-init.asm"))
 
-(assemble-files "obj/segment.bin" "tests/segment.asm")
+;(assemble-files "obj/segment.bin" "tests/segment.asm")
+(do-bender-test "segment")
