@@ -11,13 +11,6 @@
   (- pc-end pc-start))
 
 (defvar *sourceblock-stack* nil)
-
-(defstruct segment
-  size
-  (may-be-shorter? nil)
-  (sourceblocks nil))
-
-(defvar *segments* nil)
 (defvar *unassigned-segment-blocks* nil)
 (defvar *assign-blocks-to-segments?* nil)
 
@@ -43,9 +36,9 @@
 (defun assign-segment-block (bytes-left b may-be-shorter?)
   (= *unassigned-segment-blocks* (remove b *unassigned-segment-blocks* :test #'eq))
   (format t " ~A~F" (sourceblock-size b))
-  (+ (list (. *assembler-current-line*.
-              (. 'expression (butlast (queue-list (sourceblock-exprs b))))))
-     (try-to-assign-segment-block (- bytes-left (sourceblock-size b)) may-be-shorter?)))
+  (+ (butlast (queue-list (sourceblock-exprs b)))
+     (try-to-assign-segment-block (- bytes-left (sourceblock-size b))
+                                  may-be-shorter?)))
 
 (defun find-largest-fitting-block (bytes-left)
   (find-if [<= (sourceblock-size _) bytes-left] *unassigned-segment-blocks*))
@@ -69,11 +62,7 @@
   (| (number? size)
      (assembler-error "SEGMENT expects a size."))
   (? *assign-blocks-to-segments?*
-     (fill-segment size may-be-shorter?)
-     (progn
-       (enqueue *segments* (make-segment :size size
-                                         :may-be-shorter? may-be-shorter?))
-       nil)))
+     (fill-segment size may-be-shorter?)))
 
 (defun sort-unassigned-segment-blocks ()
   (= *unassigned-segment-blocks* (sort *unassigned-segment-blocks*

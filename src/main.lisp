@@ -1,6 +1,6 @@
 ; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
-(cl:proclaim '(cl:optimize (cl:speed 3) (cl:space 0) (cl:safety 3) (cl:debug 2)))
+(cl:proclaim '(cl:optimize (cl:speed 0) (cl:space 0) (cl:safety 3) (cl:debug 3)))
 (load "environment/platforms/shared/read-binary.lisp")
 (load "environment/platforms/shared/xml-entities.lisp")
 (load "environment/platforms/shared/xml2lml.lisp")
