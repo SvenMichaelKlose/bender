@@ -49,16 +49,12 @@ be used as an operand.  Comments start with a semicolon.
 ## Literals
 
 
-Bytes, words and strings do not need red tape.  Words must
-have enough leading zeroes:
-NOTE: The leading zero notation for word does NOT work at
-the moment.
+Bytes, words and strings do not need red tape.
 
 ```
+    1       ; A decimal byte.
     $1      ; A hexadecimal byte.
     $01     ; A hexadecimal byte as well.
-    $001    ; A hexadecimal word.
-    $0001   ; Also a hexadecimal word.
     %101    ; A binary byte.
     "This is an ASCIIZ string." 0
 ```
@@ -91,8 +87,8 @@ n1: jsr s2
 l1:
 ```
 
-A leading '+' makes Bender search in following labels,
-a leading '-' make it search in previous code:
+A leading '+' makes Bender search for later labels,
+a leading '-' makes it search for earlier code:
 
 ```
 l1: lda f0
@@ -104,12 +100,7 @@ n1: lda f1
 n1: jsr s2
     jmp -l1     ; Use previous "l1".
 l1:
-```
 
-A label is always in previous code if it's used on the same
-line:
-
-```
 w:  jmp -w      ; Wait…
 ```
 

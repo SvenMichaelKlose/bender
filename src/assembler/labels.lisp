@@ -17,7 +17,9 @@
 (defun update-label (x addr)
   (alet *next-labels*.
     (unless (eq !. x)
-      (error "Internal error: wanted to update label ~A but found ~A." x !.))
+      (assembler-error (+ "Wanted to update label ~A but found ~A.~%"
+                          "Please make sure that your code does not change across passes.")
+                       x !.))
     (unless (== .! addr)
       (= .! addr)
       (= *label-changed?* t)))
@@ -33,10 +35,10 @@
      (when required?
        (assembler-error "No ~A label '~A'." direction x))))
 
-(defun get-previous-label (x &key (required? t))
+(defun get-earlier-label (x &key (required? t))
   (get-label-in *previous-labels* x "previous" required?))
 
-(defun get-next-label (x &key (required? t))
+(defun get-later-label (x &key (required? t))
   (get-label-in *next-labels* x "next" required?))
 
 (defun has-label? (x)
@@ -44,10 +46,14 @@
      (cdr (assoc x *next-labels* :test #'eq))))
 
 (defun get-label-undirected (x &key (required? t))
-  (with (prev  (get-previous-label x :required? nil)
-         next  (get-next-label x :required? nil))
+  (with (prev  (get-earlier-label x :required? nil)
+         next  (get-later-label x :required? nil))
     (& required? prev next
-       (assembler-error "Label ~A appears in previous and later code. Please specify a direction." x))
+       (assembler-error (+ "Label ~A appears in earlier and later code.~%"
+                           "Please specify a direction by prependig a `+` or `-`.~%"
+                           "If you want to look up the label from inside a Lisp expression,~%"
+                           "please see functions GET-EARLIER-LABEL and GET-LATER-LABEL.~%")
+                        x))
     (| prev next
        (cdr (assoc x *imported-labels* :test #'eq))
        (& required?
@@ -59,8 +65,8 @@
       (alet (& (< 1 (length n)) 
                (make-symbol (subseq n 1)))
         (case (elt n 0) :test #'==
-          #\-  (get-previous-label ! :required? required?)
-          #\+  (get-next-label ! :required? required?)
+          #\-  (get-earlier-label ! :required? required?)
+          #\+  (get-later-label ! :required? required?)
           #\<  (low (| (get-label ! :required? required?) 0))
           #\>  (high (| (get-label ! :required? required?) 0))
           (get-label-undirected x :required? required?))))))
