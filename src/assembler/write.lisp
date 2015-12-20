@@ -7,6 +7,7 @@
       (= ! (>> ! 8)))))
 
 (defun write-instruction (instruction out)
+  (= *pc* (instruction-address instruction))
   (write-byte (instruction-opcode instruction) out)
   (write-instruction-operand instruction out))
 
@@ -25,5 +26,10 @@
 
 (defun write-assembled-expressions (x out)
   (adolist x
-    (adolist (.!)
-      (write-assembled-expression ! out))))
+    (with-temporary *assembler-current-line* !
+      (let pc *pc*
+        (adolist (.!)
+          (let bytes (with-string-stream sout
+                       (write-assembled-expression ! sout))
+            (princ bytes out)
+            (assemble-dump-line *pc* bytes)))))))

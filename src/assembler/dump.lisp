@@ -1,5 +1,7 @@
 ; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
+(defvar *assembler-dump-stream* nil)
+
 (defun print-dump-header (o)
   (format o ";~%")
   (format o "; Pass ~A~%" *pass*)

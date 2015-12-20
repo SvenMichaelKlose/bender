@@ -16,8 +16,10 @@
     (let dump-name (+ out-name ".lst")
       (format t "Assembling to '~A'. Dump file is '~A'…~%" out-name dump-name)
       (with-output-file out out-name
-        (write-assembled-expressions (prog1 (assemble-parsed-files (parse-files in-names))
-                                       (check-on-unassigned-blocks)
-                                       (rewind-labels))
-                                     out))))
+        (with-output-file dump dump-name
+          (with-temporary *assembler-dump-stream* dump
+          (write-assembled-expressions (prog1 (assemble-parsed-files (parse-files in-names))
+                                         (check-on-unassigned-blocks)
+                                         (rewind-labels))
+                                       out))))))
   nil)
