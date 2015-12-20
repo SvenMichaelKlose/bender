@@ -54,16 +54,16 @@
             !))))
 
 (defun tokenize-decimal (in)
-  (when (peek-char in)
-    (. 'number (read-number in))))
+  (& (peek-char in)
+     (read-number in)))
 
 (defun tokenize-hexadecimal (in)
   (read-char in)
-  (. 'number (read-hex in)))
+  (read-hex in))
 
 (defun tokenize-binary (in)
   (read-char in)
-  (. 'number (read-binary in)))
+  (read-binary in))
 
 (defun tokenize-expression (in)
   (read-char in)
@@ -71,7 +71,7 @@
 
 (defun tokenize-string (in)
   (read-char in)
-  (. 'string (read-string in)))
+  (read-string in))
 
 (defun tokenize-comment (in)
   (awhile (not (== 10 (peek-char in)))

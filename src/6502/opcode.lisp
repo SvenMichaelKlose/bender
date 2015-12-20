@@ -48,8 +48,7 @@
 
 (defun opcode-instruction (opcode)
   (with ((mnem m) (opcode-mnemonic-addrmode opcode))
-    (make-instruction :opcode    opcode
-                      :mnemonic  mnem
+    (make-instruction :mnemonic  mnem
                       :addrmode  (?
                                    (not m)            'accu
                                    (& (in? mnem 'ldx 'stx)

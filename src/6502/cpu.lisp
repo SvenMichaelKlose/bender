@@ -1,5 +1,11 @@
 ; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
+(defconstant +branch-instructions+ '(bpl bmi bvc bvs bcc bcs bne beq))
+(defconstant +rw-instructions+ '(asl dec inc lsr rol ror))
+(defconstant +stack-instructions+ '(pha php pla plp))
+(defconstant +modifying-instructions+ (+ +rw-instructions+ 
+                                         '(sta stx sty asl lsr rol ror inc dec)))
+
 ; Opcodes have the format AAABBBCC.  For reasons I don't know they're
 ; usually referred to as AA, BB and CC.
 
@@ -91,10 +97,5 @@
                (rti . 6)
                (jsr . 6)))
 
-(defconstant +rw-instructions+ '(asl dec inc lsr rol ror))
-(defconstant +stack-instructions+ '(pha php pla plp))
-
-(defconstant +modifying-instructions+ (+ +rw-instructions+ 
-                                         '(sta stx sty asl lsr rol ror inc dec)))
-(defun modifying-instruction? (x)
-  (member x +modifying-instructions+ :test #'eq))
+(defun branch-instruction? (x)    (member x +branch-instructions+ :test #'eq))
+(defun modifying-instruction? (x) (member x +modifying-instructions+ :test #'eq))

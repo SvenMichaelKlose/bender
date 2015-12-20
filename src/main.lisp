@@ -1,5 +1,6 @@
 ; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
+;(cl:proclaim '(cl:optimize (cl:speed 0) (cl:space 0) (cl:safety 3) (cl:debug 3)))
 (load "environment/platforms/shared/read-binary.lisp")
 (load "environment/platforms/shared/xml-entities.lisp")
 (load "environment/platforms/shared/xml2lml.lisp")
@@ -13,12 +14,19 @@
 (load "src/disassembler/print.lisp")
 (load "src/disassembler/toplevel.lisp")
 
+(load "src/assembler/global.lisp")
+(load "src/assembler/message.lisp")
 (load "src/assembler/labels.lisp")
 (load "src/assembler/tokenizer.lisp")
 (load "src/assembler/parser.lisp")
 (load "src/assembler/labels-to-exprs.lisp")
+(load "src/assembler/assemble.lisp")
 (load "src/assembler/helpers.lisp")
 (load "src/assembler/vice.lisp")
+(load "src/assembler/segment.lisp")
+(load "src/assembler/directives.lisp")
+(load "src/assembler/dump.lisp")
+(load "src/assembler/write.lisp")
 (load "src/assembler/toplevel.lisp")
 
 (load "src/tap/bin2cbmtap.lisp")
