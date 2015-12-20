@@ -63,10 +63,12 @@
 (defun update-pc (x pc)
   (+ pc
      (?
+       (not x)           0
        (number? x)       1
        (string? x)       (length x)
        (instruction? x)  (instruction-size x)
-       0)))
+       (& (cons? x)
+          (number? x.))  (length x))))
 
 (defun catch-end (x)
   (& (cons? x)
