@@ -31,9 +31,12 @@ inc_zp:
 r:  rts
 
 sub_zp:
-    eor #$ff
-    clc
-    adc #1
+    sec
+    sbc 0,x
+    sta 0,x
+    bcc +r
+    dec 1,x
+r:  rts
 
 add_zp:
     clc
