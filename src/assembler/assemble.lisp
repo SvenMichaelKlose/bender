@@ -68,7 +68,8 @@
        (string? x)       (length x)
        (instruction? x)  (instruction-size x)
        (& (cons? x)
-          (number? x.))  (length x))))
+          (number? x.))  (length x)
+       0)))
 
 (defun catch-end (x)
   (& (cons? x)
