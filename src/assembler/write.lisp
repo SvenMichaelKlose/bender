@@ -27,9 +27,8 @@
 (defun write-assembled-expressions (x out)
   (adolist x
     (with-temporary *assembler-current-line* !
-      (let pc *pc*
-        (adolist (.!)
-          (let bytes (with-string-stream sout
-                       (write-assembled-expression ! sout))
-            (princ bytes out)
-            (assemble-dump-line *pc* bytes)))))))
+      (adolist (.!)
+        (let bytes (with-string-stream sout
+                     (write-assembled-expression ! sout))
+          (princ bytes out)
+          (assemble-dump-line *pc* bytes))))))
