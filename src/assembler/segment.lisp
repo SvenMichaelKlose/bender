@@ -1,32 +1,7 @@
 ; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
-(defstruct sourceblock
-  name
-  returner
-  (exprs (make-queue))
-  pc-start
-  pc-end)
-
-(def-sourceblock sourceblock-size (sourceblock)
-  (- pc-end pc-start))
-
-(defvar *sourceblock-stack* nil)
 (defvar *unassigned-segment-blocks* nil)
-(defvar *assign-blocks-to-segments?* nil)
-
-(defun make-block-returner ()
-  (alet (make-returner)
-    [(| *assign-blocks-to-segments?*
-        (push _ *unassigned-segment-blocks*))
-     (funcall ! _)]))
-
-(defun assemble-block (x)
-  (push (make-sourceblock :name 'block
-                          :returner (make-block-returner)
-                          :pc-start *pc*)
-        *sourceblock-stack*)
-  (= *disabled?* *assign-blocks-to-segments?*)
-  nil)
+(defvar *segment-mode* nil)
 
 (defun fill-up-remaining-segment (bytes-left)
   (format t "~LFilling up remaining segment space with ~A zeroes.~%" bytes-left)
@@ -60,9 +35,12 @@
 
 (defun segment (&key size (may-be-shorter? nil))
   (| (number? size)
-     (assembler-error "SEGMENT expects a size."))
-  (? *assign-blocks-to-segments?*
-     (fill-segment size may-be-shorter?)))
+     (assembler-error "SEGMENT expects an integer size."))
+  (?
+    (& (eq *segment-mode* :assign)
+       may-be-shorter?)         (fill-segment size may-be-shorter?)
+    (& (eq *segment-mode* :assign-fixed)
+       (not may-be-shorter?))   (fill-segment size may-be-shorter?)))
 
 (defun sort-unassigned-segment-blocks ()
   (= *unassigned-segment-blocks* (sort *unassigned-segment-blocks*
@@ -70,9 +48,31 @@
                                                  (>= (sourceblock-size a)
                                                      (sourceblock-size b))))))
 
+(defun size-of-unassigned-blocks ()
+  (apply #'+ (@ #'sourceblock-size *unassigned-segment-blocks*)))
+
 (defun check-on-unassigned-blocks ()
   (awhen *unassigned-segment-blocks*
-    (assembler-error "~A BLOCKs couldn't get assigned to SEGMENTs (~A bytes). Remaining blocks: ~A"
+    (assembler-error (+ "~A BLOCKs of ~A bytes in total couldn't get assigned to SEGMENTs ~%"
+                        "Remaining blocks: ~A")
                      (length *unassigned-segment-blocks*)
-                     (apply #'+ (@ #'sourceblock-size *unassigned-segment-blocks*))
+                     (size-of-unassigned-blocks)
                      *unassigned-segment-blocks*)))
+
+(defun assign-blocks-to-segments (x)
+  (with-temporary *segment-mode* :assign-fixed
+    (assemble-pass x :description " (assigning BLOCKs to fixed-sized SEGMENTs)"))
+  (with-temporary *segment-mode* :assign
+    (assemble-pass x :description " (assigning BLOCKs to fixed-sized SEGMENTs)"))
+  (check-on-unassigned-blocks)
+  (with-temporary *segment-mode* :emit
+    (assemble-multiple-passes x)))
+
+(defun assemble-segments (x)
+  (sort-unassigned-segment-blocks)
+  (with-temporary *unassigned-segment-blocks* nil
+    (with-temporary *segment-mode* :collect
+      (assemble-pass x :description " (collecting SEGMENT BLOCKs)"))
+    (? *unassigned-segment-blocks*
+       (assign-blocks-to-segments x)
+       x)))

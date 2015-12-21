@@ -98,7 +98,7 @@
 
 (defun assemble-parsed-expressions (x)
   (@ [with-temporary *assembler-current-line* _
-       (| *assign-blocks-to-segments?*
+       (& (eq *segment-mode* :collect)
           (let-when b *sourceblock-stack*.
             (enqueue (sourceblock-exprs b) _)))
        (. _.
@@ -106,30 +106,3 @@
              (@ #'assemble ._)
              (assemble ._)))]
      x))
-
-(defun assemble-pass (x &key unassigned-segment-blocks segments description)
-  (format t "Pass ~A~A…~%" *pass* description)
-  (= *label-changed?* nil
-     *unassigned-segment-blocks* unassigned-segment-blocks
-     *segments* segments
-     *pc*       0
-     *acycles*  0)
-  (rewind-labels)
-  (aprog1 (assemble-parsed-expressions x)
-    (++! *pass*)))
-
-(defun assemble-multiple-passes (x &key (unassigned-segment-blocks nil)
-                                        (segments (make-queue))
-                                        (description ""))
-  (clear-labels)
-  (= *pass* 0)
-  (prog1 (while (| *label-changed?*
-                   (< *pass* 4))
-                (assemble-pass x :unassigned-segment-blocks unassigned-segment-blocks
-                                 :segments segments
-                                 :description description)
-           (assemble-pass x :unassigned-segment-blocks unassigned-segment-blocks
-                            :segments segments
-                            :description description))
-    (!? *sourceblock-stack*
-        (assembler-error "Block(s) with no END: ~A" !))))

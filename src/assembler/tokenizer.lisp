@@ -16,8 +16,6 @@
 (defun extra-identifier-char? (x)
   (member x +extra-identifier-chars+ :test #'character==))
 
-(defconstant +directives+ '(org fill if data block end))
-
 (defun skip-whitespaces (in)
   (awhen (peek-char in)
     (unless (== 10 !)
@@ -33,9 +31,6 @@
           (extra-identifier-char? !))
        (. (read-char in)
           (read-identifier in)))))
-
-(defun directive? (x)
-  (member x +directives+ :test #'eq))
 
 (defun mnemonic? (x)
   (member (case x :test #'eq

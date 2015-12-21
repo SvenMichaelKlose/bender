@@ -1,51 +1,42 @@
 ; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
 
-(defun assemble-org (x)
+(defvar *directives* nil)
+
+(defun directive? (x)
+  (assoc x *directives* :test #'eq))
+
+(defmacro define-directive (name arg &body body)
+  (print-definition `(define-directive ,name))
+  (& (directive? name)
+     (error "Directive ~A has been defined already." name))
+  `(acons! ',name #'((,arg) ,@body) *directives*))
+
+(defun assemble-directive (x)
+  (!? (directive? .x.)
+      (funcall .! x)
+      (assembler-error "Unsupported directive ~A." x)))
+
+(define-directive org x
   (= *pc* (assemble-expression ..x.))
   nil)
 
-(defun assemble-fill (x)
+(define-directive fill x
   (when (< 1 *pass*)
     (alet (assemble-expression ..x.)
       (& (< ! 0)
          (assembler-error "Cannot fill minus ~A bytes." (abs !)))
       (maptimes [identity 0] !))))
 
-(defun make-returner ()
-  (with (disabled?  *disabled?*
-         data?      *data?*)
-    [= *disabled?* disabled?
-       *data?*     data?]))
-
-(defun push-sourceblock (name)
-  (push (make-sourceblock :name name
-                          :returner (make-returner))
-        *sourceblock-stack*))
-
-(defun assemble-if (x)
+(define-directive if x
   (| ..x
      (assembler-error "IF expects a Lisp expression."))
   (push-sourceblock 'if)
   (= *disabled?* (not (assemble-expression ..x. :ensure? t :not-zero? t)))
   nil)
 
-(defun assemble-data (x)
+(define-directive data x
   (push-sourceblock 'data)
   (= *data?* t)
-  nil)
-
-(defun make-block-returner ()
-  (alet (make-returner)
-    [(| *assign-blocks-to-segments?*
-        (push _ *unassigned-segment-blocks*))
-     (funcall ! _)]))
-
-(defun assemble-block (x)
-  (push (make-sourceblock :name 'block
-                          :returner (make-block-returner)
-                          :pc-start *pc*)
-        *sourceblock-stack*)
-  (= *disabled?* *assign-blocks-to-segments?*)
   nil)
 
 (defun assemble-end (x)
@@ -55,7 +46,7 @@
   (& ...x
      (assembler-error "END doesn't expect more than one optional argument. (IF, DATA or BLOCK.)"))
   (| (in? (cdr ..x.) nil 'if 'data 'block)
-     (assembler-error "END expects IF, DATA or BLOCK as an argument."))
+     (assembler-error "END expects IF, DATA or BLOCK or no argument."))
   (with (b         (pop *sourceblock-stack*)
          name      (cdr ..x.)
          expected  (sourceblock-name b))
@@ -66,12 +57,5 @@
     (funcall (sourceblock-returner b) b))
   nil)
 
-(defun assemble-directive (x)
-  (case .x.
-    'org    (assemble-org x)
-    'fill   (assemble-fill x)
-    'if     (assemble-if x)
-    'data   (assemble-data x)
-    'block  (assemble-block x)
-    'end    (assemble-end x)
-    (assembler-error "Unsupported directive ~A." x)))
+(define-directive end x
+  (assemble-end x))
