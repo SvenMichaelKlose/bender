@@ -14,7 +14,7 @@
      +vic-defaults-pal+))
 
 (defun vic-horigin (tv num-columns)
-  (- (elt (vic-defaults tv) 0) (- 22 num-columns)))
+  (- (elt (vic-defaults tv) 0) (- num-columns 22)))
 
 (defun vic-vorigin (tv num-rows)
-  (- (elt (vic-defaults tv) 0) (* 4 (- 22 num-rows))))
+  (- (elt (vic-defaults tv) 1) (* 2 (- num-rows 23))))
