@@ -34,6 +34,7 @@
 (load "src/tap/tap2wav.lisp")
 
 (load "src/cbm/ascii2petscii.lisp")
+(load "src/cbm/exomize.lisp")
 
 (load "src/cbm-basic/keywords.lisp")
 (load "src/cbm-basic/start-addresses.lisp")
