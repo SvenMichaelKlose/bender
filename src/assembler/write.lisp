@@ -1,4 +1,4 @@
-; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
+; bender – Copyright (c) 2014–2016 Sven Michael Klose <pixel@hugbox.org>
 
 (def-instruction write-instruction-operand (instruction out)
   (alet operand
@@ -8,6 +8,7 @@
 
 (defun write-instruction (instruction out)
   (= *pc* (instruction-address instruction))
+  (= *cycles* (instruction-cycles instruction))
   (write-byte (instruction-opcode instruction) out)
   (write-instruction-operand instruction out))
 
