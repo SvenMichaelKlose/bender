@@ -10,17 +10,24 @@
        (error "WAV file data in in 16-bit format."))
     (with (last-low     0
            last-value   0
-           sample-rate  (wavinfo-sample-rate !))
+           last-edge    0
+           sample-rate  (wavinfo-sample-rate !)
+           min-length   (/ sample-rate 8000))
       (awhile (read-word i)
               nil
         (= ! (bit-xor ! #x8000))
-        (when (& (< #x8000 last-value)
+        (when (< last-edge !)
+          (= last-edge !))
+        (when (& (< min-length last-low)
+                 (< #x8800 last-edge)
+                 (< #x8000 last-value)
                  (< ! #x8000))
           (let cycles (integer (* last-low (/ cpu-cycles sample-rate)))
             (? (< cycles #x800)
                (write-byte (/ cycles 8) o)
                (write-dword (<< cycles 8) o))
-            (= last-low 0)))
+            (= last-low 0)
+            (= last-edge 0)))
         (++! last-low)
         (= last-value !)))))
 
