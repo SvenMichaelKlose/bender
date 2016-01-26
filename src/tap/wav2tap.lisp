@@ -8,7 +8,7 @@
        (error "WAV file data isn't mono."))
     (| (== 16 (wavinfo-bits !))
        (error "WAV file data in in 16-bit format."))
-    (with (last-low     0
+    (with (last-middle     0
            last-value   0
            last-edge    0
            sample-rate  (wavinfo-sample-rate !)
@@ -18,17 +18,17 @@
         (= ! (bit-xor ! #x8000))
         (when (< last-edge !)
           (= last-edge !))
-        (when (& (< min-length last-low)
+        (when (& (< min-length last-middle)
                  (< #x8800 last-edge)
                  (< #x8000 last-value)
                  (< ! #x8000))
-          (let cycles (integer (* last-low (/ cpu-cycles sample-rate)))
+          (let cycles (integer (* last-middle (/ cpu-cycles sample-rate)))
             (? (< cycles #x800)
                (write-byte (/ cycles 8) o)
                (write-dword (<< cycles 8) o))
-            (= last-low 0)
+            (= last-middle 0)
             (= last-edge 0)))
-        (++! last-low)
+        (++! last-middle)
         (= last-value !)))))
 
 (defun wav2tap (i o &key cpu-cycles)
