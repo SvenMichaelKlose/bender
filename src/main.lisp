@@ -4,6 +4,7 @@
 (tre-load "platforms/shared/read-binary.lisp")
 (tre-load "platforms/shared/xml-entities.lisp")
 (tre-load "platforms/shared/xml2lml.lisp")
+(tre-load "platforms/shared/wavinfo.lisp")
 
 (load "src/6502/cpu.lisp")
 (load "src/6502/instruction.lisp")
@@ -32,6 +33,7 @@
 (load "src/tap/bin2cbmtap.lisp")
 (load "src/tap/tap.lisp")
 (load "src/tap/tap2wav.lisp")
+(load "src/tap/wav2tap.lisp")
 
 (load "src/cbm/ascii2petscii.lisp")
 (load "src/cbm/exomize.lisp")
