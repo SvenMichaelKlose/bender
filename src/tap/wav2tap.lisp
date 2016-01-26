@@ -8,26 +8,32 @@
        (error "WAV file data isn't mono."))
     (| (== 16 (wavinfo-bits !))
        (error "WAV file data in in 16-bit format."))
-    (with (last-middle     0
+    (with (last-middle  0
            last-value   0
-           last-edge    0
+           last-high    #x8001
+           last-low     #x7fff
+           middle       0
            sample-rate  (wavinfo-sample-rate !)
            min-length   (/ sample-rate 8000))
       (awhile (read-word i)
               nil
         (= ! (bit-xor ! #x8000))
-        (when (< last-edge !)
-          (= last-edge !))
+        (when (< last-high !)
+          (= last-high !))
+        (when (< ! last-low)
+          (= last-low !))
+        (= middle (+ last-low (half (- last-high last-low))))
         (when (& (< min-length last-middle)
-                 (< #x8800 last-edge)
-                 (< #x8000 last-value)
-                 (< ! #x8000))
+                 (< (+ middle #x800) last-high)
+                 (< middle last-value)
+                 (< ! middle))
           (let cycles (integer (* last-middle (/ cpu-cycles sample-rate)))
             (? (< cycles #x800)
                (write-byte (/ cycles 8) o)
                (write-dword (<< cycles 8) o))
             (= last-middle 0)
-            (= last-edge 0)))
+            (= last-high #x8001)
+            (= last-low #x7fff)))
         (++! last-middle)
         (= last-value !)))))
 
