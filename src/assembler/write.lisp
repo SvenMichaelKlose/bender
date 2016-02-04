@@ -14,10 +14,13 @@
 
 (defun write-assembled-expression (x out)
   (?
-    (string? x)         (princ x out)
-    (number? x)         (write-byte x out)
+    (string? x)         (prog1 (princ x out)
+                          (+! *pc* (length x)))
+    (number? x)         (prog1 (write-byte x out)
+                          (++! *pc*))
     (& (cons? x)
-       (number? x.))    (adolist x (write-byte ! out))
+       (number? x.))    (prog1 (adolist x (write-byte ! out))
+                          (+! *pc* (length x)))
     (instruction? x)    (write-instruction x out)
     (| (not x)
        (label? x)
