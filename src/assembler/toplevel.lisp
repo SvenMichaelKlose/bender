@@ -20,6 +20,7 @@
           (with-temporary *assembler-dump-stream* dump
           (write-assembled-expressions (prog1 (assemble-parsed-files (parse-files in-names))
                                          (check-on-unassigned-blocks)
-                                         (rewind-labels))
+                                         (rewind-labels)
+                                         (= *pc* 0))
                                        out))))))
   nil)
