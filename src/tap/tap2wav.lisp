@@ -16,9 +16,6 @@
   (adolist data
     (write-byte ! o)))
 
-(defun pulse2wavlen (x freq cpu-cycles)
-  (cl:floor (/ (* x freq) cpu-cycles)))
-
 (defun get-long (in)
   (+ (read-char in)
      (<< (read-char in) 8)
@@ -28,31 +25,27 @@
   (adotimes #x14
     (read-byte i))
   (with-queue q
-              (let ocycles 0
-    (while (peek-char i)
-           nil
-      (with (cycles  (+ ocycles
-                        (alet (read-byte i)
-                          (? (zero? !)
-                             (get-long i)
-                             (* 8 !))))
-             len  (pulse2wavlen cycles freq cpu-cycles)
-             scycles  (/ cpu-cycles freq)
-             icycles  (* len scycles)
-             diff (- cycles icycles)
-             corr (/ (* (half diff) 128) scycles))
-        (when (< diff 0)
-          (error "diff is negative."))
-        (when (< 128 corr)
-          (error "corr out of range."))
-        (= len (half len))
-        (alet corr
-          (dotimes (i len)
-            (enqueue q (- 192 !))
-            (= ! 0)))
-        (dotimes (i len)
-          (enqueue q (+ 64 corr))
-          (= corr 0))
-        (= ocycles diff)))
-    )
+    (with (val 0
+           scycles  (/ cpu-cycles freq)
+           lcycles scycles
+           wr [
+               (? (< lcycles 1)
+                 (progn
+                   (enqueue q (+ 128 (/ (+ val (* _ lcycles)) scycles)))
+                   (= val (* _ (- 1 lcycles)))
+                   (= lcycles (- scycles (- 1 lcycles))))
+                 (progn
+                   (+! val _)
+                   (--! lcycles)))]
+           )
+      (while (peek-char i)
+             nil
+        (with (cycles  (alet (read-byte i)
+                         (? (zero? !)
+                            (get-long i)
+                            (* 8 !))))
+          (dotimes (i (half cycles))
+            (wr 63))
+          (dotimes (i (half cycles))
+            (wr -64)))))
     (write-wav o freq 1 8 (queue-list q))))
