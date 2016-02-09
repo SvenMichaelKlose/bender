@@ -17,13 +17,12 @@
     (write-byte ! o)))
 
 (defun pulse2wavlen (x freq cpu-cycles)
-  (/ (* 8 freq x) cpu-cycles))
+  (/ (* x freq) cpu-cycles))
 
-(defun longpulse2wavlen (in freq cpu-cycles)
-  (alet (+ (read-char in)
-           (<< (read-char in) 8)
-           (<< (read-char in) 16))
-    (/ (* freq !) cpu-cycles)))
+(defun get-long (in)
+  (+ (read-char in)
+     (<< (read-char in) 8)
+     (<< (read-char in) 16)))
 
 (defun tap2wav (i o freq cpu-cycles)
   (adotimes #x14
@@ -32,9 +31,10 @@
     (while (peek-char i)
            nil
       (alet (half (alet (read-byte i)
-                    (? (zero? !)
-                       (longpulse2wavlen i freq cpu-cycles)
-                       (pulse2wavlen ! freq cpu-cycles))))
+                       (pulse2wavlen (? (zero? !)
+                                        (get-long i)
+                                        (* 8 !))
+                                     freq cpu-cycles)))
         (dotimes (i !)
           (enqueue q 0))
         (dotimes (i !)
