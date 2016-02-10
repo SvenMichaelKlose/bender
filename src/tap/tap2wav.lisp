@@ -13,8 +13,7 @@
   (write-word sample-bits o)
   (format o "data")
   (write-dword (length data) o)
-  (adolist data
-    (write-byte ! o)))
+  (princ data o))
 
 (defun get-long (in)
   (+ (read-char in)
@@ -24,14 +23,14 @@
 (defun tap2wav (i o freq cpu-cycles)
   (adotimes #x14
     (read-byte i))
-  (with-queue q
+  (with-output-file tmp "tap2wav.tmp"
     (with (val 0
            scycles  (/ cpu-cycles freq)
            lcycles scycles
            wr [
                (? (< lcycles 1)
                  (progn
-                   (enqueue q (+ 128 (/ (+ val (* _ lcycles)) scycles)))
+                   (write-byte (integer (+ 128 (/ (+ val (* _ lcycles)) scycles))) tmp)
                    (= val (* _ (- 1 lcycles)))
                    (= lcycles (- scycles (- 1 lcycles))))
                  (progn
@@ -40,14 +39,14 @@
            )
       (while (peek-char i)
              nil
-        (with (cycles  (alet (read-byte i)
-                         (? (zero? !)
-                            (get-long i)
-                            (* 8 !))))
+        (with (cycles  (integer (alet (read-byte i)
+                                  (? (zero? !)
+                                     (get-long i)
+                                     (* 8 !)))))
           (adotimes cycles
-            (wr (* 64 (degree-sin (* ! (/ 360 cycles)))))))))
+            (wr (integer (* 64 (degree-sin (* !  (/ 360 cycles))))))))))
 ;          (dotimes (i (half cycles))
 ;            (wr 63))
 ;          (dotimes (i (half cycles))
 ;            (wr -64)))))
-    (write-wav o freq 1 8 (queue-list q))))
+    (write-wav o freq 1 8 (fetch-file "tap2wav.tmp"))))
