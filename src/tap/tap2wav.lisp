@@ -16,11 +16,11 @@
   (princ data o))
 
 (defun get-long (in)
-  (+ (read-char in)
-     (<< (read-char in) 8)
-     (<< (read-char in) 16)))
+  (+ (read-byte in)
+     (<< (read-byte in) 8)
+     (<< (read-byte in) 16)))
 
-(defun tap2wav (i o freq cpu-cycles)
+(defun tap2wav (i o freq cpu-cycles &key (sine? nil))
   (adotimes #x14
     (read-byte i))
   (with-output-file tmp "tap2wav.tmp"
@@ -43,10 +43,12 @@
                                   (? (zero? !)
                                      (get-long i)
                                      (* 8 !)))))
-          (adotimes cycles
-            (wr (integer (* 64 (degree-sin (* !  (/ 360 cycles))))))))))
-;          (dotimes (i (half cycles))
-;            (wr 63))
-;          (dotimes (i (half cycles))
-;            (wr -64)))))
+          (? sine?
+             (adotimes cycles
+               (wr (integer (* 64 (degree-sin (* !  (/ 360 cycles)))))))
+             (progn
+               (dotimes (i (half cycles))
+                 (wr 63))
+               (dotimes (i (half cycles))
+                 (wr -64)))))))
     (write-wav o freq 1 8 (fetch-file "tap2wav.tmp"))))
