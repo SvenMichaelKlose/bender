@@ -1,4 +1,4 @@
-; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
+; bender – Copyright (c) 2014–2016 Sven Michael Klose <pixel@copei.de>
 
 ;(cl:proclaim '(cl:optimize (cl:speed 0) (cl:space 0) (cl:safety 3) (cl:debug 3)))
 (tre-load "platforms/shared/read-binary.lisp")
@@ -41,6 +41,7 @@
 (load "src/cbm-basic/keywords.lisp")
 (load "src/cbm-basic/start-addresses.lisp")
 
+(load "src/vic-20/cpu-cycles.lisp")
 (load "src/vic-20/palettes.lisp")
 (load "src/vic-20/minigrafik.lisp")
 
