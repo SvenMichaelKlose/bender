@@ -43,6 +43,10 @@
 
 (test-tap)
 
+(with-input-file i "obj/test.tap"
+  (with-output-file o "obj/test.wav"
+    (tap2wav i o 441000 (cpu-cycles :pal))))
+
 (with-temporary *model* :vic-20
   (assemble-files "obj/cbm-basic-init.prg"
                   "vic-20/basic-loader.asm"
