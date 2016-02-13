@@ -42,19 +42,21 @@
                                   (? (zero? !)
                                      (get-long i)
                                      (* 8 !)))))
-          (? sine?
-             (adotimes cycles
-               (wr (integer (* 64 (degree-sin (* !  (/ 360 cycles)))))))
+          (? (< 65535 cycles)
+               (adotimes cycles (wr 0))
+             sine?
+               (adotimes cycles
+                 (wr (integer (* 64 (degree-sin (* !  (/ 360 cycles)))))))
              (progn
                (dotimes (i (half cycles))
                  (wr 63))
                (dotimes (i (half cycles))
-                 (wr -64)))))))
-    (alet (fetch-file "tap2wav.tmp")
-      (write-wavinfo (make-wavinfo :format-tag 1
-                                   :channels 1
-                                   :rate freq
-                                   :bits 8)
-                     (length !)
-                     o)
-      (princ ! o))))
+                 (wr -64))))))))
+  (alet (fetch-file "tap2wav.tmp")
+    (write-wavinfo (make-wavinfo :format-tag 1
+                                 :channels 1
+                                 :rate freq
+                                 :bits 8)
+                   (length !)
+                   o)
+    (princ ! o)))
