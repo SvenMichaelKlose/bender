@@ -1,8 +1,8 @@
-; Bender – Copyright (c) 2015 Sven Michael Klose <pixel@hugbox.org>
+; Bender – Copyright (c) 2015–2016 Sven Michael Klose <pixel@hugbox.org>
 
 (defun ascii2petscii-code (x)
-  (? (< #\Z x)
-     (- x (-- #\a))
+  (? (character< #\Z x)
+     (character- x #\a (code-char 1))
      x))
 
 (defun ascii2petscii (&rest x)

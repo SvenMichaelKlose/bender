@@ -20,9 +20,9 @@
 
 (defun skip-whitespaces (in)
   (awhen (peek-char in)
-    (unless (== 10 !)
+    (unless (== 10 (char-code !))
       (when (| (control-char? !)
-               (== #\  !))
+               (character== #\  !))
         (read-char in)
         (skip-whitespaces in)))))
 
@@ -74,7 +74,7 @@
   (read-string in))
 
 (defun tokenize-comment (in)
-  (awhile (not (== 10 (peek-char in)))
+  (awhile (not (== (code-char 10) (peek-char in)))
           nil
     (read-char in)))
 
@@ -83,26 +83,27 @@
   (awhen (peek-char in)
     (?
       (char-token !)   (list (char-token (read-char in)))
-      (== ! #\")       (tokenize-string in)
-      (== ! #\@)       (tokenize-expression in)
-      (== ! #\$)       (tokenize-hexadecimal in)
-      (== ! #\%)       (tokenize-binary in)
-      (== ! #\;)       (tokenize-comment in)
-      (digit-char? !)  (tokenize-decimal in)
-      (| (tokenize-identifier in)
-         (? (control-char? !)
-            (& (read-char in) nil)
-            (error "Unexpected character ~A." (read-char in)))))))
+      (case ! :test #'character==
+        #\"  (tokenize-string in)
+        #\@  (tokenize-expression in)
+        #\$  (tokenize-hexadecimal in)
+        #\%  (tokenize-binary in)
+        #\;  (tokenize-comment in)
+        (? (digit-char? !)  (tokenize-decimal in)
+           (| (tokenize-identifier in)
+              (? (control-char? !)
+                 (& (read-char in) nil)
+                 (error "Unexpected character ~A." (read-char in)))))))))
 
 (defun tokenize-line (in)
   (skip-whitespaces in)
   (awhen (peek-char in)
-    (?
-      (== ! 10)     (progn
-                      (read-char in)
-                      nil)
-      (== ! 13)     (progn
-                      (read-char in)
-                      (tokenize-line in))
+    (case ! :test #'character==
+      (code-char 10)  (progn
+                        (read-char in)
+                        nil)
+      (code-char 13)  (progn
+                        (read-char in)
+                        (tokenize-line in))
       (. (tokenize in)
          (tokenize-line in)))))

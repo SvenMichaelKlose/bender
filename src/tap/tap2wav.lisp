@@ -30,28 +30,29 @@
            lcycles scycles
            wr [? (< lcycles 1)
                  (progn
-                   (write-byte (integer (+ 128 (/ (+ val (* _ lcycles)) scycles))) tmp)
-                   (= val (* _ (- 1 lcycles)))
+                   (write-byte (integer (number+ 128 (/ (number+ val (* _ lcycles)) scycles))) tmp)
+                   (= val (* _ (number- 1 lcycles)))
                    (= lcycles (- scycles (- 1 lcycles))))
                  (progn
                    (+! val _)
                    (--! lcycles))])
       (while (peek-char i)
              nil
-        (with (cycles  (integer (alet (read-byte i)
-                                  (? (zero? !)
-                                     (get-long i)
-                                     (* 8 !)))))
+        (with (cycles  (alet (read-byte i)
+                         (? (zero? !)
+                            (get-long i)
+                            (* 8 !))))
           (? (< 65535 cycles)
                (adotimes cycles (wr 0))
              sine?
                (adotimes cycles
-                 (wr (integer (* 64 (degree-sin (* !  (/ 360 cycles)))))))
+                 (wr (* 64 (degree-sin (* !  (/ 360 cycles))))))
              (progn
                (dotimes (i (half cycles))
                  (wr 63))
                (dotimes (i (half cycles))
                  (wr -64))))))))
+  (format t "Writing generated WAV…~%")
   (alet (fetch-file "tap2wav.tmp")
     (write-wavinfo (make-wavinfo :format-tag 1
                                  :channels 1

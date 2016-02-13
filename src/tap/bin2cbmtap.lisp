@@ -1,4 +1,4 @@
-; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@hugbox.org>
+; bender – Copyright (c) 2014–2016 Sven Michael Klose <pixel@hugbox.org>
 
 (defconstant +short+  #x2c)  ;#x30)
 (defconstant +medium+ #x3f)  ;#x42)
@@ -114,7 +114,7 @@
   (with (data  (filter [? (< _ 0)
                           (+ 256 _)
                           _]
-                         data)
+                       (@ #'char-code data))
          len   (length data)
          end   (+ start len))
     (format t "CBM file name is '~A'.~%" (subseq name 0 16))
