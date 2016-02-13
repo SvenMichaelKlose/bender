@@ -21,22 +21,21 @@
      (<< (read-byte in) 16)))
 
 (defun tap2wav (i o freq cpu-cycles &key (sine? nil))
+  (= (stream-track-input-location? i) nil)
   (adotimes #x14
     (read-byte i))
   (with-output-file tmp "tap2wav.tmp"
     (with (val 0
            scycles  (/ cpu-cycles freq)
            lcycles scycles
-           wr [
-               (? (< lcycles 1)
+           wr [? (< lcycles 1)
                  (progn
                    (write-byte (integer (+ 128 (/ (+ val (* _ lcycles)) scycles))) tmp)
                    (= val (* _ (- 1 lcycles)))
                    (= lcycles (- scycles (- 1 lcycles))))
                  (progn
                    (+! val _)
-                   (--! lcycles)))]
-           )
+                   (--! lcycles))])
       (while (peek-char i)
              nil
         (with (cycles  (integer (alet (read-byte i)
@@ -51,4 +50,11 @@
                  (wr 63))
                (dotimes (i (half cycles))
                  (wr -64)))))))
-    (write-wav o freq 1 8 (fetch-file "tap2wav.tmp"))))
+    (alet (fetch-file "tap2wav.tmp")
+      (write-wavinfo (make-wavinfo :format-tag 1
+                                   :channels 1
+                                   :rate freq
+                                   :bits 8)
+                     (length !)
+                     o)
+      (princ ! o))))
