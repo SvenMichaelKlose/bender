@@ -1,7 +1,7 @@
 ; bender – Copyright (c) 2014–2016 Sven Michael Klose <pixel@hugbox.org>
 
 (def-instruction write-instruction-operand (instruction out)
-  (alet operand
+  (alet (integer operand)
     (dotimes (i (instruction-operand-size instruction))
       (write-byte (mod ! 256) out)
       (= ! (>> ! 8)))))
