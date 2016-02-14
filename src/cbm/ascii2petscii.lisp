@@ -2,7 +2,7 @@
 
 (defun ascii2petscii-code (x)
   (? (character< #\Z x)
-     (character- x #\a (code-char 1))
+     (code-char (byte (- (char-code x) (- (char-code #\a) 1))))
      x))
 
 (defun ascii2petscii (&rest x)
