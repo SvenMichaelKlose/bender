@@ -20,10 +20,7 @@
      (<< (read-byte in) 8)
      (<< (read-byte in) 16)))
 
-(defun tap2wav (i o freq cpu-cycles &key (sine? nil))
-  (= (stream-track-input-location? i) nil)
-  (adotimes #x14
-    (read-byte i))
+(defun pulses2wavdata (i freq cpu-cycles &key (sine? nil))
   (with-output-file tmp "tap2wav.tmp"
     (with (val 0
            scycles  (/ cpu-cycles freq)
@@ -52,8 +49,14 @@
                  (wr 63))
                (dotimes (i (half cycles))
                  (wr -64))))))))
-  (format t "Writing generated WAV…~%")
-  (alet (fetch-file "tap2wav.tmp")
+  (fetch-file "tap2wav.tmp"))
+
+(defun tap2wav (i o freq cpu-cycles &key (sine? nil))
+  (= (stream-track-input-location? i) nil)
+  (adotimes #x14
+    (read-byte i))
+  (alet (pulses2wavdata i freq cpu-cycles :sine? sine?)
+    (format t "Writing generated WAV…~%")
     (write-wavinfo (make-wavinfo :format-tag 1
                                  :channels 1
                                  :rate freq
