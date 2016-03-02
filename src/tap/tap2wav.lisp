@@ -1,20 +1,5 @@
 ; bender – Copyright (c) 2014–2016 Sven Michael Klose <pixel@hugbox.org>
 
-(defun write-wav (o freq channels sample-bits data)
-  (format o "RIFF")
-  (write-dword (length data) o)
-  (format o "WAVEfmt ")
-  (write-dword 16 o)
-  (write-word #x0001 o)         ; PCM
-  (write-word channels o)
-  (write-dword freq o)
-  (write-dword freq o)
-  (write-word 1 o)              ; Block alignment
-  (write-word sample-bits o)
-  (format o "data")
-  (write-dword (length data) o)
-  (princ data o))
-
 (defun get-long (in)
   (+ (read-byte in)
      (<< (read-byte in) 8)
