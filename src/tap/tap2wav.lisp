@@ -1,4 +1,4 @@
-; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
+; bender – Copyright (c) 2014–2016 Sven Michael Klose <pixel@hugbox.org>
 
 (defun write-wav (o freq channels sample-bits data)
   (format o "RIFF")
@@ -20,7 +20,7 @@
      (<< (read-byte in) 8)
      (<< (read-byte in) 16)))
 
-(defun pulses2wavdata (i freq cpu-cycles &key (sine? nil))
+(defun pulses2wavdata (i freq cpu-cycles)
   (with-output-file tmp "tap2wav.tmp"
     (with (val 0
            scycles  (/ cpu-cycles freq)
@@ -40,22 +40,17 @@
                             (get-long i)
                             (* 8 !))))
           (? (< 65535 cycles)
-               (adotimes cycles (wr 0))
-             sine?
-               (adotimes cycles
-                 (wr (* 64 (degree-sin (* !  (/ 360 cycles))))))
-             (progn
-               (dotimes (i (half cycles))
-                 (wr 63))
-               (dotimes (i (half cycles))
-                 (wr -64))))))))
+             (adotimes cycles
+               (wr 0))
+             (adotimes cycles
+               (wr (* 64 (degree-sin (* !  (/ 360 cycles)))))))))))
   (fetch-file "tap2wav.tmp"))
 
-(defun tap2wav (i o freq cpu-cycles &key (sine? nil))
+(defun tap2wav (i o freq cpu-cycles)
   (= (stream-track-input-location? i) nil)
   (adotimes #x14
     (read-byte i))
-  (alet (pulses2wavdata i freq cpu-cycles :sine? sine?)
+  (alet (pulses2wavdata i freq cpu-cycles)
     (format t "Writing generated WAV…~%")
     (write-wavinfo (make-wavinfo :format-tag 1
                                  :channels 1
