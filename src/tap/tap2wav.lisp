@@ -6,6 +6,7 @@
      (<< (read-byte in) 16)))
 
 (defun pulses2wavdata (i freq cpu-cycles)
+  (format t "Converting TAP to WAV…~%")
   (with-output-file tmp "tap2wav.tmp"
     (with (val 0
            scycles  (/ cpu-cycles freq)
