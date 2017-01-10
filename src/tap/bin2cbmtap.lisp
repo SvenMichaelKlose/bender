@@ -46,6 +46,8 @@
 (defvar *chk* 0)
 
 (defun write-byte-without-checksumming (o x)
+  (? (character? x)         ; TODO: Remove workaround.
+     (= x (char-code x)))
   (write-sod o)
   (let chk 1
     (dotimes (i 8)

@@ -1,5 +1,3 @@
-; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
-
 (defconstant +char-tokens+
     '((#\# . hash)
       (#\, . comma)
@@ -9,7 +7,7 @@
       (#\= . assignment)))
 
 (defun char-token (x)
-  (cdar (member-if [== x _.] +char-tokens+)))
+  (cdar (member-if [character== x _.] +char-tokens+)))
 
 (defconstant +extra-identifier-chars+ '(#\_ #\+ #\- #\< #\>))
 
@@ -74,7 +72,7 @@
   (read-string in))
 
 (defun tokenize-comment (in)
-  (awhile (not (== (code-char 10) (peek-char in)))
+  (awhile (not (character== (code-char 10) (peek-char in)))
           nil
     (read-char in)))
 

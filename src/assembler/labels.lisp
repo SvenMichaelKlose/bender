@@ -64,7 +64,7 @@
     (let n (symbol-name x)
       (alet (& (< 1 (length n)) 
                (make-symbol (subseq n 1)))
-        (case (elt n 0) :test #'==
+        (case (elt n 0) :test #'character==
           #\-  (get-earlier-label ! :required? required?)
           #\+  (get-later-label ! :required? required?)
           #\<  (low (| (get-label ! :required? required?) 0))
