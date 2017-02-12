@@ -1,5 +1,3 @@
-; bender – Copyright (c) 2014–2016 Sven Michael Klose <pixel@hugbox.org>
-
 (def-instruction write-instruction-operand (instruction out)
   (alet (integer operand)
     (dotimes (i (instruction-operand-size instruction))
@@ -14,13 +12,15 @@
 
 (defun write-assembled-expression (x out)
   (?
-    (string? x)         (prog1 (princ x out)
-                          (+! *pc* (length x)))
-    (number? x)         (prog1 (write-byte x out)
-                          (++! *pc*))
+    (string? x)              (prog1 (princ x out)
+                               (+! *pc* (length x)))
+    (| (number? x)
+       (character? x))       (prog1 (write-byte x out)
+                               (++! *pc*))
     (& (cons? x)
-       (number? x.))    (prog1 (adolist x (write-byte ! out))
-                          (+! *pc* (length x)))
+       (| (number? x.)
+          (character? x.)))  (prog1 (adolist x (write-byte ! out))
+                               (+! *pc* (length x)))
     (instruction? x)    (write-instruction x out)
     (| (not x)
        (label? x)

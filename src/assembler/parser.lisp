@@ -119,8 +119,9 @@
 (defun parse-0 (x)
   (when x
     (?
-      (number? x.)  x
-      (string? x.)  x
+      (number? x.)     x
+      (character? x.)  x
+      (string? x.)     x
       (case x.. :test #'eq
         'expression  (. x. (parse-0 .x))
         'label       (. x. (parse-0 .x))

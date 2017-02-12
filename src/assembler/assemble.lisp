@@ -1,7 +1,6 @@
-; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
-
 (defun assemble-expression (x &key (ensure? nil) (not-zero? nil))
   (| (? (| (number? x)
+           (character? x)
            (string? x))
         x)
      (case x.
@@ -55,7 +54,8 @@
 (defun assemble-toplevel-expression (x)
   (!? (assemble-expression x :ensure? t :not-zero? t)
       (? (cons? !)
-         (? (number? !.)
+         (? (| (number? !.)
+               (character? !.))
             !
             (assemble-parsed-expressions !))
          !)))
@@ -63,12 +63,14 @@
 (defun update-pc (x pc)
   (+ pc
      (?
-       (not x)           0
-       (number? x)       1
-       (string? x)       (length x)
-       (instruction? x)  (instruction-size x)
+       (not x)                  0
+       (number? x)              1
+       (character? x)           1
+       (string? x)              (length x)
+       (instruction? x)         (instruction-size x)
        (& (cons? x)
-          (number? x.))  (length x)
+          (| (number? x.)
+             (character? x.)))  (length x)
        0)))
 
 (defun catch-end (x)
@@ -84,6 +86,7 @@
                (not x)           x
                (string? x)       x
                (number? x)       x
+               (character? x)    x
                (instruction? x)  (assemble-instruction x)
                (case x.
                  'label       (assemble-label x)
