@@ -1,5 +1,3 @@
-; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
-
 (defun labels-to-exprs (x)
   (with (f [| (? (get-label _ :required? nil)
                  `(get-label ',_)
@@ -8,7 +6,7 @@
                       (alpha-char? (elt n 1))
                       (alet (make-symbol (subseq n 1))
                         (? (get-label ! :required? nil)
-                           (case (elt n 0) :test #'==
+                           (case (elt n 0)
                              #\-  `(get-previous-label ',!)
                              #\+  `(get-next-label ',!)
                              #\<  `(low ,(f !))
