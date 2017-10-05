@@ -1,11 +1,9 @@
-; bender – Copyright (c) 2014–2016 Sven Michael Klose <pixel@hugbox.org>
-
-(defun get-long (in)
+(fn get-long (in)
   (+ (read-byte in)
      (<< (read-byte in) 8)
      (<< (read-byte in) 16)))
 
-(defun pulses2wavdata (i freq cpu-cycles)
+(fn pulses2wavdata (i freq cpu-cycles)
   (format t "Converting TAP to WAV…~%")
   (with-output-file tmp "tap2wav.tmp"
     (with (val 0
@@ -29,10 +27,10 @@
              (adotimes cycles
                (wr 0))
              (adotimes cycles
-               (wr (* 64 (degree-sin (* !  (/ 360 cycles)))))))))))
+               (wr (* 110 (degree-sin (* !  (/ 360 cycles)))))))))))
   (fetch-file "tap2wav.tmp"))
 
-(defun tap2wav (i o freq cpu-cycles)
+(fn tap2wav (i o freq cpu-cycles)
   (= (stream-track-input-location? i) nil)
   (adotimes #x14
     (read-byte i))
