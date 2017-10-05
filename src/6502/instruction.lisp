@@ -1,5 +1,3 @@
-; bender – Copyright (c) 2014 Sven Michael Klose <pixel@copei.de>
-
 (defstruct instruction
   address
   mnemonic
@@ -7,26 +5,26 @@
   (operand-expression nil)
   (operand nil))
 
-(defun opcode-aa (x)
+(fn opcode-aa (x)
   (bit-and (>> x 5) 7))
 
-(defun opcode-bb (x)
+(fn opcode-bb (x)
   (bit-and (>> x 2) 7))
 
-(defun opcode-cc (x)
+(fn opcode-cc (x)
   (bit-and x 3))
 
-(defun addrmode-size (addrmode)
+(fn addrmode-size (addrmode)
   (?
     (in? addrmode 'accu 'single 'ill)                 0
     (in? addrmode 'branch 'imm 'zp 'zpx 'izpx 'izpy)  1
     (in? addrmode 'indi 'abs 'absx 'absy)             2
     (error "Cannot determine size of addressing mode ~A.~%" addrmode)))
 
-(defun instruction-operand-size (inst)
+(fn instruction-operand-size (inst)
   (addrmode-size (instruction-addrmode inst)))
 
-(defun instruction-size (inst)
+(fn instruction-size (inst)
   (++ (instruction-operand-size inst)))
 
 (def-instruction instruction-branch-address (instruction pc)
@@ -57,8 +55,11 @@
                     addrmode)
            addrmode)))))
 
-(defun generate-opcode (mnemonic addrmode)
+(fn generate-opcode (mnemonic addrmode)
   (alet (href *instructions* mnemonic)
+    (when (& (eq 'ldx mnemonic)
+             (eq 'absx addrmode))
+      (= addrmode 'absy))
     (| (href ! addrmode)
        (? (in? addrmode 'abs 'zp)
           (href ! 'branch))
