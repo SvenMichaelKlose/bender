@@ -60,9 +60,9 @@
   (= *chk* (bit-xor *chk* x))
   (write-byte-without-checksumming o x))
 
-(defun write-leader (o)
+(defun write-leader (o short?)
   (format t "Making leader...~%")
-  (adotimes #x6a00
+  (adotimes ((? short? #x2000 #x6a00))
     (write-short o)))
 
 (defun write-sync (o repeated?)
@@ -94,25 +94,32 @@
   (write-byte-with-checksumming o (>> start 8))
   (write-byte-with-checksumming o (mod end 256))
   (write-byte-with-checksumming o (>> end 8))
-  (dolist (i (string-list name))
-    (write-byte-with-checksumming o i))
-  (dotimes (i (- 187 (length name)))
-    (write-byte-with-checksumming o 32))
+  (? (& repeated? short-data?)
+     (adotimes 2
+       (write-byte-with-checksumming o 0))
+     (progn
+       (dolist (i (string-list name))
+         (write-byte-with-checksumming o i))
+       (dotimes (i (- 187 (length name)))
+         (write-byte-with-checksumming o 32))))
   (write-byte-without-checksumming o *chk*)
   (write-eod o))
 
-(defun write-data (o data repeated?)
+(defun write-data (o data repeated? short-data?)
   (write-sync o repeated?)
   (format t "Making ~Adata (~A bytes)...~%"
           (? repeated?  "repeated " "")
           (length data))
   (= *chk* 0)
-  (adolist data
-    (write-byte-with-checksumming o !))
+  (? (& repeated? short-data?)
+     (adotimes 2
+       (write-byte-with-checksumming o 0))
+     (adolist data
+       (write-byte-with-checksumming o !)))
   (write-byte-without-checksumming o *chk*)
   (write-eod o))
 
-(defun bin2cbmtap (data name &key (type +cbmtype-relocatable+) start)
+(defun bin2cbmtap (data name &key (type +cbmtype-relocatable+) start (short-leader? nil) (short-data? nil) (no-gaps? nil))
   (with (data  (filter [? (< _ 0)
                           (+ 256 _)
                           _]
@@ -125,16 +132,18 @@
             (print-hexword start nil)
             (print-hexword end nil))
     (let p (make-string-stream)
-      (write-gap p)
-      (write-leader p)
+      (| no-gaps?
+         (write-gap p))
+      (write-leader p short-leader?)
       (write-header p type start end name nil)
       (write-interblock-gap p)
-      (write-header p type start end name :repeated)
+      (write-header p type start end name :repeated short-data?)
       (write-trailer p)
-      (write-gap p)
+      (| no-gaps?
+         (write-gap p))
       (write-interrecord-gap p)
-      (write-data p data nil)
+      (write-data p data nil nil)
       (write-interblock-gap p)
-      (write-data p data :repeated)
+      (write-data p data :repeated short-data?)
       (write-trailer p)
       (list-string (queue-list (stream-user-detail p))))))
