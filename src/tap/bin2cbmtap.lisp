@@ -85,7 +85,7 @@
   (adotimes #x4e
     (write-short o)))
 
-(defun write-header (o type start end name repeated?)
+(defun write-header (o type start end name repeated? short-data?)
   (write-sync o repeated?)
   (format t "Making ~Aheader...~%" (? repeated?  "repeated " ""))
   (= *chk* 0)
@@ -135,15 +135,15 @@
       (| no-gaps?
          (write-gap p))
       (write-leader p short-leader?)
-      (write-header p type start end name nil)
+      (write-header p type start end name nil nil)
       (write-interblock-gap p)
-      (write-header p type start end name :repeated short-data?)
+      (write-header p type start end name t short-data?)
       (write-trailer p)
       (| no-gaps?
          (write-gap p))
       (write-interrecord-gap p)
       (write-data p data nil nil)
       (write-interblock-gap p)
-      (write-data p data :repeated short-data?)
+      (write-data p data t short-data?)
       (write-trailer p)
       (list-string (queue-list (stream-user-detail p))))))
