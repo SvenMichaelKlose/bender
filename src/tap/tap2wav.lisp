@@ -6,28 +6,34 @@
 (fn pulses2wavdata (i freq cpu-cycles)
   (format t "Converting TAP to WAV…~%")
   (with-output-file tmp "tap2wav.tmp"
-    (with (val 0
+    (with (waves    (make-hash-table :test #'==)
+           val 0
            scycles  (/ cpu-cycles freq)
-           lcycles scycles
-           wr [? (< lcycles 1)
-                 (progn
-                   (write-byte (integer (number+ 128 (/ (number+ val (* _ lcycles)) scycles))) tmp)
-                   (= val (* _ (number- 1 lcycles)))
-                   (= lcycles (- scycles (- 1 lcycles))))
-                 (progn
-                   (+! val _)
-                   (--! lcycles))])
+           lcycles  scycles
+           wr [(? (< lcycles 1)
+                  (progn
+                    (write-byte (integer (number+ 128 (/ (number+ val (* _ lcycles)) scycles))) tmp)
+                    (= val (* _ (number- 1 lcycles)))
+                    (= lcycles (- scycles (- 1 lcycles))))
+                  (progn
+                    (+! val _)
+                    (--! lcycles)))
+               _])
       (while (peek-char i)
              nil
-        (with (cycles  (alet (read-byte i)
+        (with (cycles  (!= (read-byte i)
                          (? (zero? !)
                             (get-long i)
                             (* 8 !))))
           (? (< 65535 cycles)
              (adotimes cycles
                (wr 0))
-             (adotimes cycles
-               (wr (* 110 (degree-sin (* !  (/ 360 cycles)))))))))))
+             (!? (href waves cycles)
+                 (@ [wr _] !)
+                 (with-queue q
+                   (adotimes cycles
+                     (enqueue q (wr (* 110 (degree-sin (+ 180 (* ! (/ 360 cycles))))))))
+                   (= (href waves cycles) (queue-list q)))))))))
   (fetch-file "tap2wav.tmp"))
 
 (fn tap2wav (i o freq cpu-cycles)
