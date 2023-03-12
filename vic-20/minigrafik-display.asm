@@ -10,6 +10,7 @@ mg_bitmap_size = 3840
 mg_display:
     ; Set up VIC colors.
     ldy #0
+    sty $9002       ; Blank screen.
     lda (mg_s),y
     inc mg_s
     sta $900e
@@ -72,6 +73,10 @@ m:  sta (mg_d),y
     inc @(++ mg_d)
 n:  inx
     cpx #12
+    bne -l
+
+    ; Wait for retrace.
+l:  lda $9004
     bne -l
 
     ; Set up VIC.
