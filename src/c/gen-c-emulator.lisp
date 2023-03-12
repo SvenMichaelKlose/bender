@@ -46,5 +46,5 @@
                    (princ (exec-code !. .!) o))
                (enqueue q "e_ill"))))
       (format o "typedef void (*instruction) (void);~%")
-      (format o "instruction instructions[256] = ~A;~%" (apply #'+ (c-list (queue-list q) :brackets :curly)))
+      (format o "instruction instructions[256] = ~A;~%" (apply #'+ (c-list (queue-list q) :parens-type :braces)))
       (terpri))))
