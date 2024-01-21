@@ -1,4 +1,4 @@
-(cl:proclaim '(optimize (speed 3) (space 3) (safety 0) (debug 0)))
+(cl:proclaim '(cl:optimize (cl:speed 3) (cl:space 3) (cl:safety 0) (cl:debug 0)))
 
 (load (+ *modules-path* "/shared/wavinfo.lisp"))
 

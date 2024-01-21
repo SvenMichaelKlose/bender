@@ -24,7 +24,7 @@
        iny cld inx sed)
       (txa txs tax tsx      ; implied (== #x8a (bit-and opcode #x8f))
        dex nil nop nil)
-      (brk jsr rti rts)))   ; (zero? (bit-and opcode #x9f))
+      (brk jsr rti rts)))   ; (== 0 (bit-and opcode #x9f))
 
 (defconstant *mnemonic-list* (remove-if #'not (apply #'+ *mnemonics*)))
 

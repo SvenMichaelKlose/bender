@@ -26,11 +26,10 @@
   (eq 'branch (addrmode opcode)))
 
 (defun zero-aacc? (opcode)
-  (& (zero? (opcode-aa opcode))
-     (zero? (opcode-cc opcode))))
+  (== 0 (opcode-aa opcode) (opcode-cc opcode)))
 
 (defun zero-9f? (opcode)
-  (zero? (bit-and opcode #x9f)))
+  (== 0 (bit-and opcode #x9f)))
 
 (defun opcode-mnemonic-addrmode (opcode)
   (?

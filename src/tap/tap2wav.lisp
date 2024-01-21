@@ -22,7 +22,7 @@
       (while (peek-char i)
              nil
         (with (cycles  (!= (read-byte i)
-                         (? (zero? !)
+                         (? (== 0 !)
                             (get-long i)
                             (* 8 !))))
           (? (< 65535 cycles)
@@ -32,7 +32,7 @@
                  (@ [wr _] !)
                  (with-queue q
                    (adotimes cycles
-                     (enqueue q (wr (* 110 (degree-sin (+ 180 (* ! (/ 360 cycles))))))))
+                     (enqueue q (wr (* 127 (degree-sin (* ! (/ 360 cycles)))))))
                    (= (href waves cycles) (queue-list q)))))))))
   (fetch-file "tap2wav.tmp"))
 

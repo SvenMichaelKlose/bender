@@ -27,7 +27,7 @@
   (write-byte +long+ o))
 
 (defun write-bit (o x)
-  (? (zero? x)
+  (? (== 0 x)
      (progn
        (write-short o)
        (write-medium o))

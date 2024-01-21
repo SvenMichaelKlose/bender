@@ -44,7 +44,7 @@
   (find-if [<= (sourceblock-size _) bytes-left] *unassigned-segment-blocks*))
 
 (defun try-to-assign-segment-block (bytes-left may-be-shorter?)
-  (unless (zero? bytes-left)
+  (unless (== 0 bytes-left)
     (!? (find-largest-fitting-block bytes-left)
         (assign-segment-block bytes-left ! may-be-shorter?)
         (? may-be-shorter?
@@ -52,7 +52,7 @@
            (fill-up-remaining-segment bytes-left)))))
 
 (defun fill-segment (size may-be-shorter?)
-  (& (zero? size)
+  (& (== 0 size)
      (assembler-error "SEGMENT size must be larger than 0."))
   (format t "Filling up segment of size ~a…" size)
   (prog1 (try-to-assign-segment-block size may-be-shorter?)
