@@ -1,6 +1,6 @@
-; bender – Copyright (c) 2015 Sven Michael Klose <pixel@copei.de>
+; bender – Copyright (c) 2015,2024 Sven Michael Klose <pixel@copei.de>
 
-(defun test-opcode-instruction-symmetry ()
+(fn test-opcode-instruction-symmetry ()
   (format t "Testing symmetry of INSTRUCTION-OPCODE and OPCODE-INSTRUCTION: ")
   (adotimes 256
     (format t " ~A~F" !)
@@ -13,11 +13,11 @@
                  (print-hexword ! nil))))))
   (format t " – O.K.~%"))
 
-(defun test-compare-files (a b)
+(fn test-compare-files (a b)
   (| (string== (fetch-file a) (fetch-file b))
      (error "Test failed! Files '~A' and '~A' differ." a b)))
 
-(defun do-bender-test (name)
+(fn do-bender-test (name)
   (with (source    (+ "tests/" name ".asm")
          result    (+ "obj/" name ".bin")
          reference (+ "tests/" name ".bin"))
@@ -32,7 +32,7 @@
 ;(do-bender-test "inline-lisp")
 (do-bender-test "if")
 
-(defun test-tap ()
+(fn test-tap ()
   (with-output-file o "obj/test.tap"
     (write-tap o
       (bin2cbmtap (string-list (fetch-file "obj/all_instructions.bin"))

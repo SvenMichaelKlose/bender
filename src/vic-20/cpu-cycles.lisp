@@ -1,9 +1,9 @@
-; Bender – Copyright (c) 2015 Sven Michael Klose <pixel@hugbox.org>
+; Bender – Copyright (c) 2015,2024 Sven Michael Klose <pixel@hugbox.org>
 
 (defconstant +cpu-cycles-pal+ 1108404)
 (defconstant +cpu-cycles-ntsc+ 1027270)
 
-(defun cpu-cycles (tv)
+(fn cpu-cycles (tv)
   (case tv
     :ntsc   +cpu-cycles-ntsc+
     :pal    +cpu-cycles-pal+

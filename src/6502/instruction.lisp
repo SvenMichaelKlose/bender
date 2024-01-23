@@ -30,7 +30,7 @@
 (def-instruction instruction-branch-address (instruction pc)
   (| (eq addrmode 'branch)
      (error "Cannot determine a destination address for non–branch ~A." mnemonic))
-  (alet (car (instruction-operand instruction))
+  (!= (car (instruction-operand instruction))
     (+ pc 2 ! (? (< 127 !)
                  -256
                  0))))
@@ -56,7 +56,7 @@
            addrmode)))))
 
 (fn generate-opcode (mnemonic addrmode)
-  (alet (href *instructions* mnemonic)
+  (!= (href *instructions* mnemonic)
     (when (& (eq 'ldx mnemonic)
              (eq 'absx addrmode))
       (= addrmode 'absy))

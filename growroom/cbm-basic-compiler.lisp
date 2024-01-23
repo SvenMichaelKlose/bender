@@ -1,45 +1,45 @@
-; bender – Copyright (c) 2015 Sven Michael Klose <pixel@hugbox.org>
+; bender – Copyright (c) 2015,2024 Sven Michael Klose <pixel@hugbox.org>
 
 ; Let's start with byte integers and strings and go on from there.
 
-(defun number-to-accu (out x)
+(fn number-to-accu (out x)
   (?
     (number? x)    (line out "lda #~A" x)
     (variable? x)  (line out "lda ~A" x)
     (error "Number expected.")))
 
-(defun accu-to-var (x)
+(fn accu-to-var (x)
   (line out "sta ~A" x))
 
-(defun var-to-ptr (x)
+(fn var-to-ptr (x)
   (line out "lda ~A")
   (line out "sta ptr")
   (line out "lda @(++ ~A)")
   (line out "sta @(++ ptr)"))
 
-(defun load-ptr (x)
+(fn load-ptr (x)
   (line out "ldy #0")
   (line out "lda (ptr),y"))
 
-(defun store-ptr (x)
+(fn store-ptr (x)
   (line out "ldy #0")
   (line out "sta (ptr),y"))
 
-(defun poke (out x)
+(fn poke (out x)
   (number-to-accu x.)
   (line out "sta ~A" .x.))
 
-(defun peek (out x)
+(fn peek (out x)
   (? (number? x.)      (line out "lda ~A" x.)
      (number-var? x.)  (progn
                          (var-to-ptr out x.)
                          (load-ptr out))
      (error "Number expected.")))
 
-(defun sys (out x)
+(fn sys (out x)
   (line out "jsr ~A" x.))
 
-(defun for (out x)
+(fn for (out x)
   (| (variable? x.)
      (error "Iterator must be a variable."))
   ; Check =
@@ -64,7 +64,7 @@
          (op-<= out to label-end)
          (op->= out to label-end))))
 
-(defun next (out x)
+(fn next (out x)
   (| (variable? x.)
      (error "Iterator must be a variable."))
   (with-next-labels
@@ -72,8 +72,8 @@
     (add step)
     (line out "jmp ~A" label-restart)))
 
-(defun cbm-basic-to-asm ()
-  (alet (compile-lines)
+(fn cbm-basic-to-asm ()
+  (!= (compile-lines)
     (put-file outname (+ (compiled-number-variables)
                          (compiled-array-variables)
                          (compiled-string-variables)

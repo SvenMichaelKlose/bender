@@ -1,8 +1,8 @@
-; bender – Copyright (c) 2015–2016 Sven Michael Klose <pixel@hugbox.org>
+; bender – Copyright (c) 2015–2016,2024 Sven Michael Klose <pixel@hugbox.org>
 
-(defvar *model* nil)
+(var *model* nil)
 
-(defun basic-start-address (model)
+(fn basic-start-address (model)
   (case model
     :pet         #x0401
     :cbm         #x0401

@@ -1,9 +1,9 @@
-; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
+;;; bender – Copyright (c) 2014–2015,2024 Sven Michael Klose <pixel@copei.de>
 
-(defvar *parser-stream* nil)
+(var *parser-stream* nil)
 
-(defun parser-error (x &rest fmt)
-  (alet (stream-input-location *parser-stream*)
+(fn parser-error (x &rest fmt)
+  (!= (stream-input-location *parser-stream*)
     (error "~LError while parsing '~A', line ~A: ~A"
            (stream-location-id !)
            (stream-location-line !)
@@ -19,20 +19,20 @@
 (def-head-predicate expression)
 (def-head-predicate label)
 
-(defun parse-assignment (x)
+(fn parse-assignment (x)
   (| (assignment? .x.)
      (parser-error "Assignment '=' expected instead of ~A." .x))
   `((assignment ,(cdr x.) ,..x.)))
 
-(defun parse-identifier (x)
+(fn parse-identifier (x)
   (? (assignment? .x.)
      (parse-assignment x)
      (. x. (parse-0 .x))))
 
-(defun parse-directive (x)
+(fn parse-directive (x)
   `((,(car x.) ,(cdr x.) ,@.x)))
 
-(defun parse-labels (x)
+(fn parse-labels (x)
   (& x
      (? (& (identifier? x.)
            (colon? .x.))
@@ -40,18 +40,18 @@
            (parse-labels ..x))
         (. x. (parse-labels .x)))))
 
-(defun operand-expression? (x)
+(fn operand-expression? (x)
   (| (number? x)
      (identifier? x)
      (expression? x)))
 
-(defun parse-operand-immediate (x)
+(fn parse-operand-immediate (x)
   (| (operand-expression? .x.)
      (parser-error "Expression expected instead of ~A."
                    (car .x.)))
   (values 'imm .x.))
 
-(defun parse-operand-absolute (x)
+(fn parse-operand-absolute (x)
   (? (not .x)
      (values 'abs x.)
      (? (comma? .x.)
@@ -66,7 +66,7 @@
         (parser-error "Comma expected instead of ~A."
                       (car .x.)))))
 
-(defun parse-operand-indexed-indirect (x)
+(fn parse-operand-indexed-indirect (x)
   (?
     (comma? ...x.)  (? (eq 'y (cdr ....x.))
                        (values 'izpy .x.)
@@ -74,7 +74,7 @@
     (parser-error "Comma or end of line expected instead of ~A."
                   (car ...x.))))
 
-(defun parse-operand-indirect-indexed (x)
+(fn parse-operand-indirect-indexed (x)
   (? (identifier? ...x.)
      (? (eq 'x (cdr ...x.))
         (? (bracket-close? ....x.)
@@ -84,7 +84,7 @@
         (parser-error "Index register X expected."))
      (parser-error "Index register X expected.")))
 
-(defun parse-operand-indirect (x)
+(fn parse-operand-indirect (x)
   (| (operand-expression? .x.)
      (parser-error "Expression expected instead of ~A."
                    (car .x.)))
@@ -101,22 +101,26 @@
                     "Misplaced"
                     "Missing"))))
 
-(defun parse-operand (x)
+(fn parse-operand (x)
   (?
-    (not x)             (values 'accu nil)
+    (not x)
+      (values 'accu nil)
     (& (cons? x.)
-       (eq 'hash x..))        (parse-operand-immediate x)
-    (operand-expression? x.)  (parse-operand-absolute x)
-    (bracket-open? x.)        (parse-operand-indirect x)
+       (eq 'hash x..))
+      (parse-operand-immediate x)
+    (operand-expression? x.)
+      (parse-operand-absolute x)
+    (bracket-open? x.)
+      (parse-operand-indirect x)
     (parser-error "Syntax error at ~A." x.)))
 
-(defun parse-instruction (x)
+(fn parse-instruction (x)
   (with ((addrmode operand-expression) (parse-operand .x))
     (list (make-instruction :mnemonic (cdr x.)
                             :addrmode addrmode
                             :operand-expression operand-expression))))
 
-(defun parse-0 (x)
+(fn parse-0 (x)
   (when x
     (?
       (number? x.)     x
@@ -130,10 +134,10 @@
         'identifier  (parse-identifier x)
         (parser-error "Unexpected token ~A." x.)))))
 
-(defun parse (x)
+(fn parse (x)
   (parse-0 (parse-labels x)))
 
-(defun parse-stream (i)
+(fn parse-stream (i)
   (with-temporary *parser-stream* i
     (with-queue q
       (while (peek-char i)
@@ -146,10 +150,10 @@
                            (. file-id line-nr))
                         parsed)))))))
 
-(defun parse-string (source)
+(fn parse-string (source)
   (with-stream-string in source (parse-stream in)))
 
-(defun parse-files (filepaths)
+(fn parse-files (filepaths)
   (apply #'+ (filter [(format t "Parsing '~A'…~%" _)
                       (with-input-file i _
                         (parse-stream i))]

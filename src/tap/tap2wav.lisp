@@ -40,12 +40,9 @@
   (= (stream-track-input-location? i) nil)
   (adotimes #x14
     (read-byte i))
-  (alet (pulses2wavdata i freq cpu-cycles)
+  (!= (pulses2wavdata i freq cpu-cycles)
     (format t "Writing generated WAV…~%")
-    (write-wavinfo (make-wavinfo :format-tag 1
-                                 :channels 1
-                                 :rate freq
-                                 :bits 8)
+    (write-wavinfo (make-wavinfo :format-tag 1 :channels 1 :rate freq :bits 8)
                    (length !)
                    o)
     (princ ! o)))

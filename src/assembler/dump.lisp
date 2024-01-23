@@ -1,14 +1,14 @@
-; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
+; bender – Copyright (c) 2014–2015,2024 Sven Michael Klose <pixel@copei.de>
 
-(defvar *assembler-dump-stream* nil)
+(var *assembler-dump-stream* nil)
 
-(defun print-dump-header (o)
+(fn print-dump-header (o)
   (format o ";~%")
   (format o "; Pass ~A~%" *pass*)
   (format o ";~%")
   (format o "; Adress | Cycles | Accumulated cycles | Bytes | Source~%"))
 
-(defun assemble-dump-line (pc bytes)
+(fn assemble-dump-line (pc bytes)
   (let o *assembler-dump-stream*
     (fresh-line o)
     (print-hexword pc o)

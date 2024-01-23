@@ -1,4 +1,4 @@
-; bender – Copyright (c) 2014–2016 Sven Michael Klose <pixel@hugbox.org>
+; bender – Copyright (c) 2014–2016,2024 Sven Michael Klose <pixel@hugbox.org>
 
 (defconstant +short+  #x2c)  ;#x30)
 (defconstant +medium+ #x3f)  ;#x42)
@@ -10,23 +10,23 @@
 (defconstant +cbmtype-seq-file-header+  4)
 (defconstant +cbmtype-end-of-tape+      5)
 
-(defun write-gap (o)
+(fn write-gap (o)
   (format t "Making empty gap...~%")
   (write-byte 0 o)
   (write-byte #x7a o)
   (write-byte #xfb o)
   (write-byte #x05 o))
 
-(defun write-short (o)
+(fn write-short (o)
   (write-byte +short+ o))
 
-(defun write-medium (o)
+(fn write-medium (o)
   (write-byte +medium+ o))
 
-(defun write-long (o)
+(fn write-long (o)
   (write-byte +long+ o))
 
-(defun write-bit (o x)
+(fn write-bit (o x)
   (? (== 0 x)
      (progn
        (write-short o)
@@ -35,17 +35,17 @@
        (write-medium o)
        (write-short o))))
 
-(defun write-sod (o)
+(fn write-sod (o)
   (write-long o)
   (write-medium o))
 
-(defun write-eod (o)
+(fn write-eod (o)
   (write-long o)
   (write-short o))
 
-(defvar *chk* 0)
+(var *chk* 0)
 
-(defun write-byte-without-checksumming (o x)
+(fn write-byte-without-checksumming (o x)
   (? (character? x)         ; TODO: Remove workaround.
      (= x (char-code x)))
   (write-sod o)
@@ -56,36 +56,36 @@
       (= x (>> x 1)))
     (write-bit o chk)))
 
-(defun write-byte-with-checksumming (o x)
+(fn write-byte-with-checksumming (o x)
   (= *chk* (bit-xor *chk* x))
   (write-byte-without-checksumming o x))
 
-(defun write-leader (o short?)
+(fn write-leader (o short?)
   (format t "Making leader...~%")
   (adotimes ((? short? #x2000 #x6a00))
     (write-short o)))
 
-(defun write-sync (o repeated?)
+(fn write-sync (o repeated?)
   (format t "Making ~Async...~%" (? repeated? "repeated " ""))
-  (dolist (i '(9 8 7 6 5 4 3 2 1))
+  (@ (i '(9 8 7 6 5 4 3 2 1))
     (write-byte-with-checksumming o (+ (? repeated? 0 128) i))))
 
-(defun write-interblock-gap (o)
+(fn write-interblock-gap (o)
   (format t "Making interblock gap...~%")
   (adotimes #x4f
     (write-short o)))
 
-(defun write-interrecord-gap (o)
+(fn write-interrecord-gap (o)
   (format t "Making interrecord gap...~%")
   (adotimes #x1500
     (write-short o)))
 
-(defun write-trailer (o)
+(fn write-trailer (o)
   (format t "Making trailer...~%")
   (adotimes #x4e
     (write-short o)))
 
-(defun write-header (o type start end name repeated? short-data?)
+(fn write-header (o type start end name repeated? short-data?)
   (write-sync o repeated?)
   (format t "Making ~Aheader...~%" (? repeated?  "repeated " ""))
   (= *chk* 0)
@@ -98,18 +98,18 @@
      (adotimes 2
        (write-byte-with-checksumming o 0))
      (progn
-       (dolist (i (string-list name))
+       (@ (i (string-list name))
          (write-byte-with-checksumming o i))
        (dotimes (i (- 187 (length name)))
          (write-byte-with-checksumming o 32))))
   (write-byte-without-checksumming o *chk*)
   (write-eod o))
 
-(defun write-data (o data repeated? short-data?)
+(fn write-data (o data repeated? short-data?)
   (write-sync o repeated?)
   (format t "Making ~Adata (~A bytes)...~%"
-          (? repeated?  "repeated " "")
-          (length data))
+            (? repeated?  "repeated " "")
+            (length data))
   (= *chk* 0)
   (? (& repeated? short-data?)
      (adotimes 2
@@ -119,7 +119,9 @@
   (write-byte-without-checksumming o *chk*)
   (write-eod o))
 
-(defun bin2cbmtap (data name &key (type +cbmtype-relocatable+) start (short-leader? nil) (short-data? nil) (no-gaps? nil))
+(fn bin2cbmtap (data name &key (type +cbmtype-relocatable+)
+                               start (short-leader? nil) (short-data? nil)
+                               (no-gaps? nil))
   (with (data  (filter [? (< _ 0)
                           (+ 256 _)
                           _]

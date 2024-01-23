@@ -1,12 +1,12 @@
-; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
+; bender – Copyright (c) 2014–2015,2024 Sven Michael Klose <pixel@copei.de>
 
-(defvar *assembler-current-line* nil)
-(defvar *pc* nil)
-(defvar *pass* nil)
-(defvar *disabled?* nil)
-(defvar *data?* nil)
-(defvar *cycles* nil)
-(defvar *acycles* 0)
+(var *assembler-current-line* nil)
+(var *pc* nil)
+(var *pass* nil)
+(var *disabled?* nil)
+(var *data?* nil)
+(var *cycles* nil)
+(var *acycles* 0)
 
-(defun first-pass? ()
+(fn first-pass? ()
   (< *pass* 1))

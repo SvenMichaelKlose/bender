@@ -1,4 +1,4 @@
-(defvar +cbm-basic-keywords+
+(var +cbm-basic-keywords+
   '("END" "FOR" "NEXT" "DATA" "INPUT#" "INPUT" "DIM" "READ" "LET" "GOTO"
     "RUN" "IF" "RESTORE" "GOSUB" "RETURN" "REM" "STOP" "ON" "WAIT"
     "LOAD" "SAVE" "VERIFY" "DEF" "POKE" "PRINT#" "PRINT" "CONT" "LIST"

@@ -1,4 +1,4 @@
-(defun exomize (from to addr target &key (path "/usr/local/bin/exomizer"))
+(fn exomize (from to addr target &key (path "/usr/local/bin/exomizer"))
   (sb-ext:run-program path
                       `("sfx" ,(+ "$" addr)
                         "-t" ,target

@@ -1,6 +1,6 @@
-; bender – Copyright (c) 2014 Sven Michael Klose <pixel@copei.de>
+; bender – Copyright (c) 2014,2024 Sven Michael Klose <pixel@copei.de>
 
-(defun disassemble-file (in-name out-name)
+(fn disassemble-file (in-name out-name)
   (with-input-file in in-name
     (with-output-file out out-name
       (let pc 0

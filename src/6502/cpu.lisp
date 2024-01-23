@@ -1,13 +1,17 @@
-; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
+; bender – Copyright (c) 2014–2015,2024 Sven Michael Klose <pixel@copei.de>
 
-(defconstant +branch-instructions+ '(bpl bmi bvc bvs bcc bcs bne beq))
-(defconstant +rw-instructions+ '(asl dec inc lsr rol ror))
-(defconstant +stack-instructions+ '(pha php pla plp))
-(defconstant +modifying-instructions+ (+ +rw-instructions+ 
-                                         '(sta stx sty asl lsr rol ror inc dec)))
+(defconstant +branch-instructions+
+             '(bpl bmi bvc bvs bcc bcs bne beq))
+(defconstant +rw-instructions+
+             '(asl dec inc lsr rol ror))
+(defconstant +stack-instructions+
+             '(pha php pla plp))
+(defconstant +modifying-instructions+
+             (+ +rw-instructions+ 
+                '(sta stx sty asl lsr rol ror inc dec)))
 
-; Opcodes have the format AAABBBCC.  For reasons I don't know they're
-; usually referred to as AA, BB and CC.
+;; Opcodes have the format AAABBBCC.  For reasons I don't know they're
+;; usually referred to as AA, BB and CC.
 
 (defconstant *mnemonics*
     '((nil bit jmp jmp      ; CC == 0
@@ -28,13 +32,14 @@
 
 (defconstant *mnemonic-list* (remove-if #'not (apply #'+ *mnemonics*)))
 
-; Addressing modes by CC.
+;; Addressing modes by CC.
 (defconstant *addrmodes*
     '((imm  zp single abs branch  zpx ill     absx)
       (izpx zp imm    abs izpy    zpx absy    absx)
       (imm  zp accu   abs ill     zpx single  absx)))
 
-; Legal addressing modes by CC. Each CC is mnemonic (AA) by addressing mode (BB).
+;; Legal addressing modes by CC.
+;; Each CC is mnemonic (AA) by addressing mode (BB).
 (defconstant *legal-addrmodes*
     '((; BIT JMP JMP() STY LDY CPY CPX
         (nil nil nil   nil nil  t   t   t ) ; immediate
@@ -64,7 +69,7 @@
         (nil nil nil nil nil nil nil nil)
         ( t   t   t   t   t   t  t   t )))) ; absolute X (Y for LDX and STX)
 
-(defun mnemonic? (x)                                                            
+(fn mnemonic? (x)                                                            
   (some [member _ :test #'eq] *mnemonics*))
 
 (defconstant +addrmode-cycles+
@@ -97,5 +102,8 @@
                (rti . 6)
                (jsr . 6)))
 
-(defun branch-instruction? (x)    (member x +branch-instructions+ :test #'eq))
-(defun modifying-instruction? (x) (member x +modifying-instructions+ :test #'eq))
+(fn branch-instruction? (x)
+  (member x +branch-instructions+ :test #'eq))
+
+(fn modifying-instruction? (x)
+  (member x +modifying-instructions+ :test #'eq))

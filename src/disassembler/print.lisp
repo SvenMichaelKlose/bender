@@ -1,6 +1,6 @@
-; bender – Copyright (c) 2014–2015 Sven Michael Klose <pixel@copei.de>
+; bender – Copyright (c) 2014–2015,2024 Sven Michael Klose <pixel@copei.de>
 
-(defun hex (x w)
+(fn hex (x w)
   (let r nil
     (adotimes (w (list-string r))
       (push (elt '(#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7

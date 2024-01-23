@@ -1,7 +1,7 @@
-; bender – Copyright (c) 2016 Sven Michael Klose <pixel@hugbox.org>
+; bender – Copyright (c) 2016,2024 Sven Michael Klose <pixel@hugbox.org>
 
-(defun wav2tap-0 (i o cpu-cycles)
-  (alet (read-wavinfo i)
+(fn wav2tap-0 (i o cpu-cycles)
+  (!= (read-wavinfo i)
     (| (== 1 (wavinfo-format-tag !))
        (error "WAV file data isn't in PCM format."))
     (| (== 1 (wavinfo-channels !))
@@ -37,6 +37,6 @@
         (++! last-middle)
         (= last-value !)))))
 
-(defun wav2tap (i o &key cpu-cycles)
+(fn wav2tap (i o &key cpu-cycles)
   (write-tap o (with-string-stream pulses
                  (wav2tap-0 i pulses cpu-cycles))))

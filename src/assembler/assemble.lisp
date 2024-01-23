@@ -1,4 +1,4 @@
-(defun assemble-expression (x &key (ensure? nil) (not-zero? nil))
+(fn assemble-expression (x &key (ensure? nil) (not-zero? nil))
   (| (? (| (number? x)
            (character? x)
            (string? x))
@@ -11,12 +11,14 @@
      (unless not-zero?
        0)))
 
-(defun convert-operand (x)
+(fn convert-operand (x)
   (?
-    (character? x) (char-code x)
-    (string? x)    (? (< 1 (length x))
-                      (assembler-error "Operand strings must contain one character.")
-                      (char-code (elt x 0)))
+    (character? x)
+      (char-code x)
+    (string? x)
+      (? (< 1 (length x))
+         (assembler-error "Operand strings must contain one character.")
+         (char-code (elt x 0)))
     x))
 
 (def-instruction assemble-operand (instruction x)
@@ -35,23 +37,24 @@
   (= (instruction-address instruction) *pc*)
   (& (branch-instruction? mnemonic)
      (= (instruction-addrmode instruction) 'branch))
-  (= (instruction-operand instruction) (assemble-operand instruction (assemble-expression operand-expression)))
+  (= (instruction-operand instruction)
+     (assemble-operand instruction (assemble-expression operand-expression)))
   (instruction-optimize-addrmode instruction)
   instruction)
 
-(defun assemble-label (x)
+(fn assemble-label (x)
   (add-label .x *pc*)
   x)
 
-(defun assemble-assignment (x)
+(fn assemble-assignment (x)
   (add-label .x. (assemble-expression ..x.))
   x)
 
-(defun assemble-identifier (x)
+(fn assemble-identifier (x)
   (| (get-label .x :required? (not (first-pass?)))
      0))
 
-(defun assemble-toplevel-expression (x)
+(fn assemble-toplevel-expression (x)
   (!? (assemble-expression x :ensure? t :not-zero? t)
       (? (cons? !)
          (? (| (number? !.)
@@ -60,7 +63,7 @@
             (assemble-parsed-expressions !))
          !)))
 
-(defun update-pc (x pc)
+(fn update-pc (x pc)
   (+ pc
      (?
        (not x)                  0
@@ -73,13 +76,13 @@
              (character? x.)))  (length x)
        0)))
 
-(defun catch-end (x)
+(fn catch-end (x)
   (& (cons? x)
      (eq x. 'directive)
      (eq .x. 'end)
      (assemble-end nil)))
 
-(defun assemble (x)
+(fn assemble (x)
   (? *disabled?*
      (catch-end x)
      (aprog1 (?
@@ -99,7 +102,7 @@
        (& *data?*
           (return)))))
 
-(defun assemble-parsed-expressions (x)
+(fn assemble-parsed-expressions (x)
   (@ [with-temporary *assembler-current-line* _
        (| *assign-blocks-to-segments?*
           (let-when b *sourceblock-stack*.
@@ -110,7 +113,7 @@
              (assemble ._)))]
      x))
 
-(defun assemble-pass (x &key unassigned-segment-blocks segments description)
+(fn assemble-pass (x &key unassigned-segment-blocks segments description)
   (format t "Pass ~A~A…~%" *pass* description)
   (= *label-changed?* nil
      *unassigned-segment-blocks* unassigned-segment-blocks
@@ -121,9 +124,9 @@
   (aprog1 (assemble-parsed-expressions x)
     (++! *pass*)))
 
-(defun assemble-multiple-passes (x &key (unassigned-segment-blocks nil)
-                                        (segments (make-queue))
-                                        (description ""))
+(fn assemble-multiple-passes (x &key (unassigned-segment-blocks nil)
+                                     (segments (make-queue))
+                                     (description ""))
   (clear-labels)
   (= *pass* 0)
   (prog1 (while (| *label-changed?*

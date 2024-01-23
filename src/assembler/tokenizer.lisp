@@ -6,17 +6,17 @@
       (#\: . colon)
       (#\= . assignment)))
 
-(defun char-token (x)
+(fn char-token (x)
   (cdar (member-if [character== x _.] +char-tokens+)))
 
 (defconstant +extra-identifier-chars+ '(#\_ #\+ #\- #\< #\>))
 
-(defun extra-identifier-char? (x)
+(fn extra-identifier-char? (x)
   (member x +extra-identifier-chars+ :test #'character==))
 
 (defconstant +directives+ '(org fill if data block end))
 
-(defun skip-whitespaces (in)
+(fn skip-whitespaces (in)
   (awhen (peek-char in)
     (unless (== 10 (char-code !))
       (when (| (control-char? !)
@@ -24,7 +24,7 @@
         (read-char in)
         (skip-whitespaces in)))))
 
-(defun read-identifier (in)
+(fn read-identifier (in)
   (awhen (peek-char in)
     (& (| (alpha-char? !)
           (digit? !)
@@ -32,51 +32,51 @@
        (. (read-char in)
           (read-identifier in)))))
 
-(defun directive? (x)
+(fn directive? (x)
   (member x +directives+ :test #'eq))
 
-(defun mnemonic? (x)
+(fn mnemonic? (x)
   (member (case x :test #'eq
             'blt 'bcc
             'bge 'bcs
             x)
           *mnemonic-list* :test #'eq))
 
-(defun tokenize-identifier (in)
+(fn tokenize-identifier (in)
   (!? (read-identifier in)
-      (alet (make-symbol (upcase (list-string !)))
+      (!= (make-symbol (upcase (list-string !)))
         (. (?
              (directive? !)  'directive
              (mnemonic? !)   'mnemonic
              'identifier)
-            !))))
+           !))))
 
-(defun tokenize-decimal (in)
+(fn tokenize-decimal (in)
   (& (peek-char in)
      (read-number in)))
 
-(defun tokenize-hexadecimal (in)
+(fn tokenize-hexadecimal (in)
   (read-char in)
   (read-hex in))
 
-(defun tokenize-binary (in)
+(fn tokenize-binary (in)
   (read-char in)
   (read-binary in))
 
-(defun tokenize-expression (in)
+(fn tokenize-expression (in)
   (read-char in)
   (. 'expression (read in)))
 
-(defun tokenize-string (in)
+(fn tokenize-string (in)
   (read-char in)
   (read-string in))
 
-(defun tokenize-comment (in)
+(fn tokenize-comment (in)
   (awhile (not (character== (code-char 10) (peek-char in)))
           nil
     (read-char in)))
 
-(defun tokenize (in)
+(fn tokenize (in)
   (skip-whitespaces in)
   (awhen (peek-char in)
     (? (char-token !)
@@ -94,7 +94,7 @@
                   (& (read-char in) nil)
                   (error "Unexpected character ~A." (read-char in)))))))))
 
-(defun tokenize-line (in)
+(fn tokenize-line (in)
   (skip-whitespaces in)
   (awhen (peek-char in)
     (case ! :test #'character==
